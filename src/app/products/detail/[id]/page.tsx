@@ -336,24 +336,38 @@ export default function ProductDetail({
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="relative aspect-square max-w-lg mx-auto">
-                <div className="absolute inset-0 "></div>
-                {selectedImage ? (
-                  <Image
-                    src={selectedImage}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-8 rounded-3xl"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-3xl">
-                    <span className="text-8xl text-gray-400">🔧</span>
-                  </div>
-                )}
+  <div className="absolute inset-0"></div>
 
-                {/* Status Badge */}
-              </div>
+  {selectedImage ? (
+    <div className="relative w-full h-full">
+      {/* Main Product Image */}
+      <Image
+        src={selectedImage}
+        alt={product.name}
+        fill
+        className="object-contain p-8 rounded-3xl"
+        sizes="(max-width: 768px) 100vw, 50vw"
+        priority
+      />
+
+      {/* Centered Watermark */}
+      <Image
+        src="/logo.png" // replace with your watermark
+        alt="Watermark"
+        width={150}
+        height={150}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
+      />
+    </div>
+  ) : (
+    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-3xl">
+      <span className="text-8xl text-gray-400">🔧</span>
+    </div>
+  )}
+
+  {/* Status Badge */}
+</div>
+
             </motion.div>
           </div>
         </div>
@@ -403,127 +417,140 @@ export default function ProductDetail({
           {/* Left: Enhanced Image Gallery */}
           <div className="space-y-4">
             <motion.div
-              className="relative aspect-[4/3] w-full max-w-[500px] mx-auto bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-pointer"
-              onHoverStart={() => setIsHovered(true)}
-              onHoverEnd={() => setIsHovered(false)}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <Image
-                src={
-                  allImages[selectedImageIndex] ||
-                  selectedImage ||
-                  "/placeholder-product.jpg"
-                }
-                alt={product.name}
-                fill
-                className="object-contain p-5 transition-transform duration-300"
-                sizes="(min-width:1024px) 500px, 100vw"
-                priority
-              />
+  className="relative aspect-[4/3] w-full max-w-[500px] mx-auto bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-pointer"
+  onHoverStart={() => setIsHovered(true)}
+  onHoverEnd={() => setIsHovered(false)}
+  whileHover={{ scale: 1.02 }}
+  transition={{ duration: 0.3, ease: "easeOut" }}
+>
+  <div className="relative w-full h-full">
+    {/* Main Image */}
+    <Image
+      src={
+        allImages[selectedImageIndex] ||
+        selectedImage ||
+        "/placeholder-product.jpg"
+      }
+      alt={product.name}
+      fill
+      className="object-contain p-5 transition-transform duration-300"
+      sizes="(min-width:1024px) 500px, 100vw"
+      priority
+    />
 
-              {/* Navigation arrows */}
-              {allImages.length > 1 && (
-                <>
-                  <motion.button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{
-                      opacity: isHovered ? 1 : 0,
-                      x: isHovered ? 0 : -10,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <FaChevronLeft size={16} />
-                  </motion.button>
-                  <motion.button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{
-                      opacity: isHovered ? 1 : 0,
-                      x: isHovered ? 0 : 10,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <FaChevronRight size={16} />
-                  </motion.button>
-                </>
-              )}
+    {/* Centered Watermark */}
+    <Image
+      src="/logo.png" // replace with your watermark
+      alt="Watermark"
+      width={150}
+      height={150}
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
+    />
+  </div>
 
-              {/* Expand button */}
-              <motion.button
-                onClick={() => setIsImageModalOpen(true)}
-                className="absolute top-4 right-4 bg-white/95 text-gray-700 border border-gray-200 px-3 py-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{
-                  opacity: isHovered ? 1 : 0.7,
-                  scale: isHovered ? 1 : 0.9,
-                }}
-                transition={{ duration: 0.2 }}
-              >
-                <FaExpand size={14} />
-              </motion.button>
+  {/* Navigation arrows */}
+  {allImages.length > 1 && (
+    <>
+      <motion.button
+        onClick={prevImage}
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{
+          opacity: isHovered ? 1 : 0,
+          x: isHovered ? 0 : -10,
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <FaChevronLeft size={16} />
+      </motion.button>
+      <motion.button
+        onClick={nextImage}
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
+        initial={{ opacity: 0, x: 10 }}
+        animate={{
+          opacity: isHovered ? 1 : 0,
+          x: isHovered ? 0 : 10,
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <FaChevronRight size={16} />
+      </motion.button>
+    </>
+  )}
 
-              {/* Image indicator */}
-              {allImages.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                  {allImages.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedImageIndex(idx);
-                        setSelectedImage(allImages[idx]);
-                      }}
-                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                        selectedImageIndex === idx
-                          ? "bg-blue-600 w-6"
-                          : "bg-white/70 hover:bg-white"
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </motion.div>
+  {/* Expand button */}
+  <motion.button
+    onClick={() => setIsImageModalOpen(true)}
+    className="absolute top-4 right-4 bg-white/95 text-gray-700 border border-gray-200 px-3 py-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{
+      opacity: isHovered ? 1 : 0.7,
+      scale: isHovered ? 1 : 0.9,
+    }}
+    transition={{ duration: 0.2 }}
+  >
+    <FaExpand size={14} />
+  </motion.button>
 
-            {/* Enhanced Thumbnail gallery */}
-            {allImages.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2 justify-center">
-                {allImages.map((img, idx) => (
-                  <motion.button
-                    key={idx}
-                    onClick={() => {
-                      setSelectedImageIndex(idx);
-                      setSelectedImage(img);
-                    }}
-                    className={`relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
-                      selectedImageIndex === idx
-                        ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
-                        : "border-gray-200 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${product.name} ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    {selectedImageIndex === idx && (
-                      <motion.div
-                        className="absolute inset-0 bg-blue-600/10"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.2 }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-            )}
+  {/* Image indicator */}
+  {allImages.length > 1 && (
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      {allImages.map((_, idx) => (
+        <button
+          key={idx}
+          onClick={() => {
+            setSelectedImageIndex(idx);
+            setSelectedImage(allImages[idx]);
+          }}
+          className={`w-2 h-2 rounded-full transition-all duration-200 ${
+            selectedImageIndex === idx
+              ? "bg-blue-600 w-6"
+              : "bg-white/70 hover:bg-white"
+          }`}
+        />
+      ))}
+    </div>
+  )}
+</motion.div>
+
+{/* ✅ Enhanced Thumbnail Gallery (kept intact) */}
+{allImages.length > 1 && (
+  <div className="flex gap-3 overflow-x-auto pb-2 justify-center">
+    {allImages.map((img, idx) => (
+      <motion.button
+        key={idx}
+        onClick={() => {
+          setSelectedImageIndex(idx);
+          setSelectedImage(img);
+        }}
+        className={`relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
+          selectedImageIndex === idx
+            ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
+            : "border-gray-200 hover:border-gray-400 hover:shadow-md"
+        }`}
+        whileHover={{ scale: 1.1, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Image
+          src={img}
+          alt={`${product.name} ${idx + 1}`}
+          fill
+          className="object-cover"
+        />
+        {selectedImageIndex === idx && (
+          <motion.div
+            className="absolute inset-0 bg-blue-600/10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+      </motion.button>
+    ))}
+  </div>
+)}
+
 
             {/* Features Cards */}
             <motion.div
@@ -665,67 +692,7 @@ export default function ProductDetail({
         </div>
 
         {/* Enhanced Specifications section */}
-        {product.specifications && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6 }}
-            className="mt-16"
-          >
-            <div className="text-center mb-8">
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Technical Specifications
-              </h3>
-              <div className="w-20 h-1 bg-gradient-to-r from-blue-600 mx-auto rounded-full"></div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6 border-b border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-900">
-                  Product Details
-                </h4>
-                <p className="text-gray-600 text-sm mt-1">
-                  Complete technical information and specifications
-                </p>
-              </div>
-
-              <div className="p-8">
-                <div className="grid gap-1">
-                  {Object.entries(product.specifications).map(
-                    ([key, value], idx) => (
-                      <motion.div
-                        key={key}
-                        className="grid grid-cols-1 md:grid-cols-5 gap-4 py-4 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 group"
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: idx * 0.05 }}
-                        whileHover={{ x: 4 }}
-                      >
-                        <div className="md:col-span-2 flex items-center">
-                          <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                          <span className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">
-                            {key.replace(/([A-Z])/g, " $1").trim()}
-                          </span>
-                        </div>
-                        <div className="md:col-span-3 flex items-center">
-                          <span className="text-gray-700 bg-gray-50 px-4 py-2 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-800 transition-all duration-200 flex-1">
-                            {typeof value === "object"
-                              ? JSON.stringify(value)
-                              : String(value)}
-                          </span>
-                        </div>
-                      </motion.div>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-
-
-          </motion.div>
-        )}
+       
       </div>
 
       {/* Enhanced Image Modal */}

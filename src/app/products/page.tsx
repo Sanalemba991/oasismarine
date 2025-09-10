@@ -12,7 +12,7 @@ interface Product {
   name: string;
   price: number;
   description?: string;
-  image?: string;
+  image?: string; 
   isActive?: boolean;
 }
 
@@ -591,13 +591,28 @@ export default function SubcategoriesPage() {
                           {/* Category Image */}
                           <div className="bg-gray-50 relative overflow-hidden h-40">
                             {subcategory.image ? (
-                              <Image
-                                src={subcategory.image}
-                                alt={subcategory.name}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                                className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-                              />
+                              <div className="relative w-full h-full">
+                                {/* Main Product Image */}
+                                <div className="relative w-full h-full">
+                                  {/* Main Product Image */}
+                                  <Image
+                                    src={subcategory.image}
+                                    alt={subcategory.name}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                    className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                                  />
+
+                                  {/* Centered Watermark */}
+                                  <Image
+                                    src="/logo.png" // your watermark file
+                                    alt="Watermark"
+                                    width={120}
+                                    height={120}
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none"
+                                  />
+                                </div>
+                              </div>
                             ) : (
                               <div className="flex items-center justify-center h-full bg-gray-100">
                                 <svg

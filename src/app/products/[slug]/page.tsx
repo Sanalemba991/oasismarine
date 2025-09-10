@@ -608,7 +608,7 @@ export default function DynamicCategorySubcategoryPage({
                     Products
                   </Link>
                 </li>
-                
+
                 <li className="flex items-center">
                   <span className="mx-2">/</span>
                   <span className="text-blue-600 font-medium capitalize">
@@ -686,7 +686,6 @@ export default function DynamicCategorySubcategoryPage({
             </div>
 
             {/* Filter Controls Bar */}
-            
           </motion.div>
         </div>
 
@@ -740,8 +739,8 @@ export default function DynamicCategorySubcategoryPage({
                   </motion.div>
                 </div>
               </motion.div>
-            ) : (
-              <motion.section
+            ) : ( 
+              <motion.section 
                 key="products-grid"
                 initial="hidden"
                 animate={isProductsInView ? "visible" : "hidden"}
@@ -798,23 +797,51 @@ export default function DynamicCategorySubcategoryPage({
                               : "h-40"
                           }`}
                         >
-                          <Image
-                            src={product.cardImage || "/images/placeholder.jpg"}
-                            alt={product.name}
-                            fill
-                            unoptimized={true}
-                            sizes={
-                              viewMode === "list"
-                                ? "192px"
-                                : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            }
-                            className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-                          />
+                          <div className="relative w-full h-full">
+                            {/* Main Product Image */}
+                            <Image
+                              src={
+                                product.cardImage || "/images/placeholder.jpg"
+                              }
+                              alt={product.name}
+                              fill
+                              unoptimized={true}
+                              sizes={
+                                viewMode === "list"
+                                  ? "192px"
+                                  : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                              }
+                              className="object-contain p-1 transition-transform duration-300 group-hover:scale-110"
+                            />
+
+                            {/* Watermark (Centered) */}
+                            <Image
+                              src="/logo.png" // replace with your watermark file
+                              alt="Watermark"
+                              width={120}
+                              height={120}
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none"
+                            />
+                          </div>
 
                           {/* Badges */}
                           {new Date(product.createdAt) >
                             new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                            <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                            <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-3.5 h-3.5 text-white"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
                               New
                             </div>
                           )}
@@ -876,9 +903,6 @@ export default function DynamicCategorySubcategoryPage({
                                   </span>
                                 </div>
                               )}
-
-                              
-                              
                             </div>
 
                             {/* Action Buttons */}

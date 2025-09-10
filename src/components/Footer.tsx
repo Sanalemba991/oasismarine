@@ -164,7 +164,7 @@ const Footer = () => {
               </a>
 
               <a
-                href="https://www.linkedin.com/company/digital-link-technology-uae/posts/?feedView=all"
+                href="https://www.linkedin.com/company/oasis-marine-trading-llc/?originalSubdomain=ae"
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
               >
                 <FontAwesomeIcon icon={faLinkedin} className="h-4 w-4" />
