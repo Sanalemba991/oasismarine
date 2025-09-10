@@ -16,6 +16,7 @@ import {
   TagIcon,
   TruckIcon,
   ClockIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
@@ -33,6 +34,10 @@ import {
   FaLink,
   FaInstagram,
   FaFacebook,
+  FaDownload,
+  FaBox,
+  FaWeight,
+  FaRulerCombined,
 } from "react-icons/fa";
 
 interface Product {
@@ -46,6 +51,24 @@ interface Product {
   specifications?: any;
   reviewsData?: any;
   catalogFile?: string;
+  // Added packaging information
+  packaging?: {
+    dimensions?: {
+      length?: number;
+      width?: number;
+      height?: number;
+      unit?: string;
+    };
+    weight?: {
+      net?: number;
+      gross?: number;
+      unit?: string;
+    };
+    material?: string;
+    type?: string;
+    quantity?: number;
+    notes?: string;
+  };
   isActive: boolean;
   viewCount: number;
   category?: {
@@ -81,6 +104,7 @@ export default function ProductDetail({
   const [notificationMessage, setNotificationMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Initialize params
   useEffect(() => {
@@ -183,6 +207,741 @@ export default function ProductDetail({
     }
   };
 
+  // Enhanced download function for comprehensive product information
+  // Enhanced download function for comprehensive product information
+  // Enhanced download function with embedded images
+  const downloadProductInfo = async () => {
+    if (!product) return;
+
+    setIsDownloading(true);
+
+    try {
+      // Function to convert image to base64
+      const getBase64Image = async (imagePath) => {
+        try {
+          const response = await fetch(imagePath);
+          const blob = await response.blob();
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.error("Error converting image to base64:", error);
+          return null;
+        }
+      };
+
+      // Convert logo and product images to base64
+      const logoBase64 = await getBase64Image("/logo.png");
+      const productImagesBase64 = await Promise.all(
+        allImages.map(async (img) => {
+          const base64 = await getBase64Image(img);
+          return { original: img, base64 };
+        })
+      );
+
+      // Create HTML content with embedded images
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${product.name} - Product Information</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #ffffff;
+        }
+        
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        /* Professional Header */
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            color: white;
+            padding: 3rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            ${
+              logoBase64
+                ? `background: url('${logoBase64}') no-repeat center;`
+                : ""
+            }
+            background-size: 150px;
+            opacity: 0.1;
+            transform: translate(50px, -50px);
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .document-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* Content Sections */
+        .content {
+            padding: 2rem;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-header .icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+        
+        .section-content {
+            padding: 2rem;
+        }
+        
+        /* Description Section */
+        .description-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #374151;
+        }
+        
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #1e40af;
+        }
+        
+        .feature-item::before {
+            content: "✓";
+            color: #1e40af;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .feature-text {
+            color: #374151;
+            font-size: 0.95rem;
+        }
+        
+        /* Specifications Table */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .spec-table th {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .spec-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+        
+        .spec-table tr:hover {
+            background: #f9fafb;
+        }
+        
+        .spec-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Packaging Information */
+        .packaging-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .packaging-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            position: relative;
+        }
+        
+        .packaging-card::before {
+            content: attr(data-icon);
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e40af;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .packaging-card h4 {
+            margin: 1rem 0 0.5rem 0;
+            color: #1e40af;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .packaging-card p {
+            color: #374151;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0.25rem 0;
+        }
+        
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .image-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            page-break-inside: avoid;
+        }
+        
+        .image-item img {
+            max-width: 100%;
+            height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: white;
+            padding: 0.5rem;
+        }
+        
+        .image-caption {
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* Product Info Table */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-table th,
+        .info-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .info-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            width: 30%;
+        }
+        
+        .info-table td {
+            color: #6b7280;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-logo {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .footer-text {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .section {
+                border: 1px solid #ccc;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            
+            .header {
+                background: #1e40af !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+        }
+        
+        /* No Data Message */
+        .no-data-message {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <!-- Professional Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="company-logo">
+                    ${
+                      logoBase64
+                        ? `<img src="${logoBase64}" alt="Company Logo" />`
+                        : '<div style="background: #1e40af; width: 100%; height: 100%; border-radius: 8px;"></div>'
+                    }
+                </div>
+                <h1>${product.name}</h1>
+                <p class="subtitle">${
+                  product.shortDescription ||
+                  "Professional Product Documentation"
+                }</p>
+                <div class="document-info">
+                    <span>Product Information Sheet</span>
+                    <span>Generated: ${new Date().toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Product Description -->
+            ${
+              product.longDescription
+                ? `
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">📋</span>Product Overview</h2>
+                </div>
+                <div class="section-content">
+                    <p class="description-text">${product.longDescription}</p>
+                </div>
+            </div>
+            `
+                : ""
+            }
+
+            <!-- Key Features -->
+            ${
+              product.shortFeatures && product.shortFeatures.length > 0
+                ? `
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">⭐</span>Key Features & Benefits</h2>
+                </div>
+                <div class="section-content">
+                    <div class="features-grid">
+                        ${product.shortFeatures
+                          .map(
+                            (feature) => `
+                            <div class="feature-item">
+                                <span class="feature-text">${feature}</span>
+                            </div>
+                        `
+                          )
+                          .join("")}
+                    </div>
+                </div>
+            </div>
+            `
+                : ""
+            }
+
+            <!-- Specifications -->
+            ${
+              product.specifications &&
+              Object.keys(product.specifications).length > 0
+                ? `
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🔧</span>Technical Specifications</h2>
+                </div>
+                <div class="section-content">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Specification</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(product.specifications)
+                              .filter(
+                                ([key, value]) =>
+                                  value !== null &&
+                                  value !== undefined &&
+                                  value !== ""
+                              )
+                              .map(
+                                ([key, value]) => `
+                                <tr>
+                                    <td>${key
+                                      .replace(/([A-Z])/g, " $1")
+                                      .replace(/^./, (str) =>
+                                        str.toUpperCase()
+                                      )}</td>
+                                    <td>${value}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                    ${
+                      Object.keys(product.specifications).filter(
+                        ([key, value]) =>
+                          value !== null && value !== undefined && value !== ""
+                      ).length === 0
+                        ? '<div class="no-data-message">No specifications available</div>'
+                        : ""
+                    }
+                </div>
+            </div>
+            `
+                : ""
+            }
+
+            <!-- Packaging Information -->
+            ${
+              product.packaging
+                ? `
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">📦</span>Packaging & Logistics</h2>
+                </div>
+                <div class="section-content">
+                    <div class="packaging-grid">
+                        ${
+                          product.packaging.dimensions
+                            ? `
+                        <div class="packaging-card" data-icon="📏">
+                            <h4>Dimensions</h4>
+                            <p>${
+                              product.packaging.dimensions.length || "N/A"
+                            } × ${
+                                product.packaging.dimensions.width || "N/A"
+                              } × ${
+                                product.packaging.dimensions.height || "N/A"
+                              } ${product.packaging.dimensions.unit || ""}</p>
+                        </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          product.packaging.weight
+                            ? `
+                        <div class="packaging-card" data-icon="⚖️">
+                            <h4>Weight</h4>
+                            <p>Net: ${product.packaging.weight.net || "N/A"} ${
+                                product.packaging.weight.unit || ""
+                              }</p>
+                            <p>Gross: ${
+                              product.packaging.weight.gross || "N/A"
+                            } ${product.packaging.weight.unit || ""}</p>
+                        </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          product.packaging.material
+                            ? `
+                        <div class="packaging-card" data-icon="📋">
+                            <h4>Material</h4>
+                            <p>${product.packaging.material}</p>
+                        </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          product.packaging.type
+                            ? `
+                        <div class="packaging-card" data-icon="📦">
+                            <h4>Package Type</h4>
+                            <p>${product.packaging.type}</p>
+                        </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          product.packaging.quantity
+                            ? `
+                        <div class="packaging-card" data-icon="🔢">
+                            <h4>Quantity</h4>
+                            <p>${product.packaging.quantity} units per package</p>
+                        </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                    ${
+                      product.packaging.notes
+                        ? `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #eff6ff; border-left: 4px solid #1e40af; border-radius: 0 8px 8px 0;">
+                        <p><strong>Additional Notes:</strong> ${product.packaging.notes}</p>
+                    </div>
+                    `
+                        : ""
+                    }
+                </div>
+            </div>
+            `
+                : ""
+            }
+
+            <!-- Product Images -->
+            ${
+              productImagesBase64.length > 0
+                ? `
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">📸</span>Product Gallery</h2>
+                </div>
+                <div class="section-content">
+                    <div class="image-gallery">
+                        ${productImagesBase64
+                          .map(
+                            (img, index) => `
+                            <div class="image-item">
+                                ${
+                                  img.base64
+                                    ? `<img src="${img.base64}" alt="${
+                                        product.name
+                                      } - Image ${index + 1}" />`
+                                    : `<div style="height: 250px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">Image ${
+                                        index + 1
+                                      }</div>`
+                                }
+                                <p class="image-caption">Product Image ${
+                                  index + 1
+                                }</p>
+                            </div>
+                        `
+                          )
+                          .join("")}
+                    </div>
+                </div>
+            </div>
+            `
+                : ""
+            }
+
+            <!-- Product Information -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">ℹ️</span>Product Information</h2>
+                </div>
+                <div class="section-content">
+                    <table class="info-table">
+                        <tr><th>Product Name</th><td>${product.name}</td></tr>
+                        <tr><th>Product ID</th><td>${product.id}</td></tr>
+                        <tr><th>Category</th><td>${
+                          product.category?.name || "Not specified"
+                        }</td></tr>
+                        <tr><th>Subcategory</th><td>${
+                          product.subcategory?.name || "Not specified"
+                        }</td></tr>
+                        <tr><th>Release Date</th><td>${new Date(
+                          product.createdAt
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}</td></tr>
+                        <tr><th>Last Updated</th><td>${new Date(
+                          product.updatedAt
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    ${
+                      logoBase64
+                        ? `<img src="${logoBase64}" alt="Company Logo" style="width: 100%; height: 100%; object-fit: contain;" />`
+                        : '<div style="background: #1e40af; width: 100%; height: 100%; border-radius: 50%;"></div>'
+                    }
+                </div>
+                <div class="footer-text">
+                    <p>This document was automatically generated from our product database.</p>
+                    <p>For the most up-to-date information, please visit our website.</p>
+                </div>
+                <div class="footer-text">
+                    <p>© ${new Date().getFullYear()} All rights reserved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+      // Create and download the file
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${product.name
+        .replace(/[^a-z0-9]/gi, "_")
+        .toLowerCase()}_product_specification.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setNotificationMessage("Professional product documentation downloaded!");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    } catch (error) {
+      console.error("Download error:", error);
+      setNotificationMessage("Download failed. Please try again.");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -322,10 +1081,6 @@ export default function ProductDetail({
                   transition={{ duration: 0.6, delay: 0.5 }}
                 ></motion.div>
               </div>
-
-              {/* Action Buttons */}
-
-              {/* Social Share Buttons */}
             </motion.div>
 
             {/* Right side - Hero Image */}
@@ -336,38 +1091,35 @@ export default function ProductDetail({
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="relative aspect-square max-w-lg mx-auto">
-  <div className="absolute inset-0"></div>
+                <div className="absolute inset-0"></div>
 
-  {selectedImage ? (
-    <div className="relative w-full h-full">
-      {/* Main Product Image */}
-      <Image
-        src={selectedImage}
-        alt={product.name}
-        fill
-        className="object-contain p-8 rounded-3xl"
-        sizes="(max-width: 768px) 100vw, 50vw"
-        priority
-      />
+                {selectedImage ? (
+                  <div className="relative w-full h-full">
+                    {/* Main Product Image */}
+                    <Image
+                      src={selectedImage}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-8 rounded-3xl"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority
+                    />
 
-      {/* Centered Watermark */}
-      <Image
-        src="/logo.png" // replace with your watermark
-        alt="Watermark"
-        width={150}
-        height={150}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
-      />
-    </div>
-  ) : (
-    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-3xl">
-      <span className="text-8xl text-gray-400">🔧</span>
-    </div>
-  )}
-
-  {/* Status Badge */}
-</div>
-
+                    {/* Centered Watermark */}
+                    <Image
+                      src="/logo.png"
+                      alt="Watermark"
+                      width={150}
+                      height={150}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-3xl">
+                    <span className="text-8xl text-gray-400">🔧</span>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </div>
         </div>
@@ -394,7 +1146,6 @@ export default function ProductDetail({
               Products
             </Link>
             <ChevronRightIcon className="w-4 h-4" />
-
             <span className="text-gray-900 font-medium">{product.name}</span>
           </nav>
         </div>
@@ -417,142 +1168,141 @@ export default function ProductDetail({
           {/* Left: Enhanced Image Gallery */}
           <div className="space-y-4">
             <motion.div
-  className="relative aspect-[4/3] w-full max-w-[500px] mx-auto bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-pointer"
-  onHoverStart={() => setIsHovered(true)}
-  onHoverEnd={() => setIsHovered(false)}
-  whileHover={{ scale: 1.02 }}
-  transition={{ duration: 0.3, ease: "easeOut" }}
->
-  <div className="relative w-full h-full">
-    {/* Main Image */}
-    <Image
-      src={
-        allImages[selectedImageIndex] ||
-        selectedImage ||
-        "/placeholder-product.jpg"
-      }
-      alt={product.name}
-      fill
-      className="object-contain p-5 transition-transform duration-300"
-      sizes="(min-width:1024px) 500px, 100vw"
-      priority
-    />
+              className="relative aspect-[4/3] w-full max-w-[500px] mx-auto bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-pointer"
+              onHoverStart={() => setIsHovered(true)}
+              onHoverEnd={() => setIsHovered(false)}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="relative w-full h-full">
+                {/* Main Image */}
+                <Image
+                  src={
+                    allImages[selectedImageIndex] ||
+                    selectedImage ||
+                    "/placeholder-product.jpg"
+                  }
+                  alt={product.name}
+                  fill
+                  className="object-contain p-5 transition-transform duration-300"
+                  sizes="(min-width:1024px) 500px, 100vw"
+                  priority
+                />
 
-    {/* Centered Watermark */}
-    <Image
-      src="/logo.png" // replace with your watermark
-      alt="Watermark"
-      width={150}
-      height={150}
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
-    />
-  </div>
+                {/* Centered Watermark */}
+                <Image
+                  src="/logo.png"
+                  alt="Watermark"
+                  width={150}
+                  height={150}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
+                />
+              </div>
 
-  {/* Navigation arrows */}
-  {allImages.length > 1 && (
-    <>
-      <motion.button
-        onClick={prevImage}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{
-          opacity: isHovered ? 1 : 0,
-          x: isHovered ? 0 : -10,
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        <FaChevronLeft size={16} />
-      </motion.button>
-      <motion.button
-        onClick={nextImage}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
-        initial={{ opacity: 0, x: 10 }}
-        animate={{
-          opacity: isHovered ? 1 : 0,
-          x: isHovered ? 0 : 10,
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        <FaChevronRight size={16} />
-      </motion.button>
-    </>
-  )}
+              {/* Navigation arrows */}
+              {allImages.length > 1 && (
+                <>
+                  <motion.button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{
+                      opacity: isHovered ? 1 : 0,
+                      x: isHovered ? 0 : -10,
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FaChevronLeft size={16} />
+                  </motion.button>
+                  <motion.button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 text-gray-700 border border-gray-200 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{
+                      opacity: isHovered ? 1 : 0,
+                      x: isHovered ? 0 : 10,
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FaChevronRight size={16} />
+                  </motion.button>
+                </>
+              )}
 
-  {/* Expand button */}
-  <motion.button
-    onClick={() => setIsImageModalOpen(true)}
-    className="absolute top-4 right-4 bg-white/95 text-gray-700 border border-gray-200 px-3 py-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{
-      opacity: isHovered ? 1 : 0.7,
-      scale: isHovered ? 1 : 0.9,
-    }}
-    transition={{ duration: 0.2 }}
-  >
-    <FaExpand size={14} />
-  </motion.button>
+              {/* Expand button */}
+              <motion.button
+                onClick={() => setIsImageModalOpen(true)}
+                className="absolute top-4 right-4 bg-white/95 text-gray-700 border border-gray-200 px-3 py-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: isHovered ? 1 : 0.7,
+                  scale: isHovered ? 1 : 0.9,
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <FaExpand size={14} />
+              </motion.button>
 
-  {/* Image indicator */}
-  {allImages.length > 1 && (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-      {allImages.map((_, idx) => (
-        <button
-          key={idx}
-          onClick={() => {
-            setSelectedImageIndex(idx);
-            setSelectedImage(allImages[idx]);
-          }}
-          className={`w-2 h-2 rounded-full transition-all duration-200 ${
-            selectedImageIndex === idx
-              ? "bg-blue-600 w-6"
-              : "bg-white/70 hover:bg-white"
-          }`}
-        />
-      ))}
-    </div>
-  )}
-</motion.div>
+              {/* Image indicator */}
+              {allImages.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {allImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedImageIndex(idx);
+                        setSelectedImage(allImages[idx]);
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        selectedImageIndex === idx
+                          ? "bg-blue-600 w-6"
+                          : "bg-white/70 hover:bg-white"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
 
-{/* ✅ Enhanced Thumbnail Gallery (kept intact) */}
-{allImages.length > 1 && (
-  <div className="flex gap-3 overflow-x-auto pb-2 justify-center">
-    {allImages.map((img, idx) => (
-      <motion.button
-        key={idx}
-        onClick={() => {
-          setSelectedImageIndex(idx);
-          setSelectedImage(img);
-        }}
-        className={`relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
-          selectedImageIndex === idx
-            ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
-            : "border-gray-200 hover:border-gray-400 hover:shadow-md"
-        }`}
-        whileHover={{ scale: 1.1, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.2 }}
-      >
-        <Image
-          src={img}
-          alt={`${product.name} ${idx + 1}`}
-          fill
-          className="object-cover"
-        />
-        {selectedImageIndex === idx && (
-          <motion.div
-            className="absolute inset-0 bg-blue-600/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
-          />
-        )}
-      </motion.button>
-    ))}
-  </div>
-)}
+            {/* Enhanced Thumbnail Gallery */}
+            {allImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 justify-center">
+                {allImages.map((img, idx) => (
+                  <motion.button
+                    key={idx}
+                    onClick={() => {
+                      setSelectedImageIndex(idx);
+                      setSelectedImage(img);
+                    }}
+                    className={`relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
+                      selectedImageIndex === idx
+                        ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
+                        : "border-gray-200 hover:border-gray-400 hover:shadow-md"
+                    }`}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Image
+                      src={img}
+                      alt={`${product.name} ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    {selectedImageIndex === idx && (
+                      <motion.div
+                        className="absolute inset-0 bg-blue-600/10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+            )}
 
-
-            {/* Features Cards */}
+            {/* Social Share Section */}
             <motion.div
               className="flex items-center gap-3 pt-4"
               initial={{ opacity: 0, y: 20 }}
@@ -618,8 +1368,6 @@ export default function ProductDetail({
 
           {/* Right: Product Information */}
           <div className="space-y-6">
-            {/* Social Sharing Section */}
-
             {/* Product Description Section */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -636,10 +1384,10 @@ export default function ProductDetail({
                 </h2>
               )}
             </motion.div>
+
             {/* Key Features */}
             {product.shortFeatures && product.shortFeatures.length > 0 && (
               <motion.div
-                className=""
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -666,33 +1414,157 @@ export default function ProductDetail({
               </motion.div>
             )}
 
+            {/* Packaging Information Section */}
+            {product.packaging && (
+              <motion.div
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <CubeIcon className="w-6 h-6 mr-2 text-blue-600" />
+                  Packaging Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {product.packaging.dimensions && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaRulerCombined className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Dimensions
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.dimensions.length || "N/A"} ×{" "}
+                        {product.packaging.dimensions.width || "N/A"} ×{" "}
+                        {product.packaging.dimensions.height || "N/A"}{" "}
+                        {product.packaging.dimensions.unit || ""}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.weight && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaWeight className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">Weight</h4>
+                      </div>
+                      <p className="text-gray-600">
+                        Net: {product.packaging.weight.net || "N/A"}{" "}
+                        {product.packaging.weight.unit || ""}
+                      </p>
+                      <p className="text-gray-600">
+                        Gross: {product.packaging.weight.gross || "N/A"}{" "}
+                        {product.packaging.weight.unit || ""}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.material && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaBox className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">Material</h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.material}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.type && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <TagIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Package Type
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">{product.packaging.type}</p>
+                    </div>
+                  )}
+                  {product.packaging.quantity && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200 md:col-span-2">
+                      <div className="flex items-center mb-2">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Quantity per Package
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.quantity} units
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {product.packaging.notes && (
+                  <div className="mt-4 bg-blue-100 rounded-lg p-3 border-l-4 border-blue-600">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> {product.packaging.notes}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             <div className="bottom-0 left-0 w-full h-px bg-gray-300"></div>
+
+            {/* Enhanced Download Section */}
             <motion.div
-              className="w-full max-w-sm mx-auto"
+              className="space-y-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Enhanced Download Button */}
+                <motion.button
+                  onClick={downloadProductInfo}
+                  disabled={isDownloading}
+                  className="border border-blue-600 text-blue-600 py-1 px-3 rounded-md text-xs font-medium transition-all duration-300 flex items-center justify-center hover:bg-blue-600 hover:text-white mx-auto"
+
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isDownloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                      <span>Preparing Download...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaDownload className="mr-2" />
+                      <span>Download Complete Info</span>
+                    </>
+                  )}
+                </motion.button>
+
+                {/* PDF Catalog Button */}
                 {product.catalogFile && (
-                  <a
+                  <motion.a
                     href={product.catalogFile}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-60px border-2 border-blue-600 text-blue-600 py-2 px-4  font-medium hover:bg-blue-600 hover:text-white transition-colors duration-300 flex items-center justify-center text-sm"
+                    className="flex-1 border-2 border-blue-600 text-blue-600 py-3 px-6 rounded-xl font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <DocumentArrowDownIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">Download PDF</span>
-                  </a>
+                    <DocumentArrowDownIcon className="w-5 h-5 mr-2" />
+                    <span>PDF Catalog</span>
+                  </motion.a>
                 )}
+              </div>
+
+              {/* Download Info */}
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  Complete info includes: Product details, specifications,
+                  packaging info, and all images
+                </p>
               </div>
             </motion.div>
           </div>
         </div>
-
-        {/* Enhanced Specifications section */}
-       
       </div>
 
       {/* Enhanced Image Modal */}
