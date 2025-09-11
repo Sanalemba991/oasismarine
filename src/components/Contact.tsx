@@ -485,28 +485,7 @@ const Contact: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white resize-vertical"
                     placeholder="Tell us more about your inquiry..."
                   />
-                </div>
-
-                {/* reCAPTCHA placeholder */}
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 border border-gray-300">
-                  <div className="flex-shrink-0">
-                    <div className="w-6 h-6 border-2 border-gray-400 flex items-center justify-center cursor-pointer hover:border-gray-600 transition-colors">
-                      <div className="w-3 h-3 bg-transparent"></div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600">I'm not a robot</p>
-                  <div className="ml-auto">
-                    <div className="flex flex-col items-end">
-                      <div className="text-xs text-gray-400">reCAPTCHA</div>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <div className="text-xs text-gray-400">Privacy</div>
-                        <div className="text-xs text-gray-400">-</div>
-                        <div className="text-xs text-gray-400">Terms</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+                </div>                        
                 {/* Submit Button */}
                 <div className="flex justify-center">
                   <motion.button

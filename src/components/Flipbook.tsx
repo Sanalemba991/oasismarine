@@ -76,7 +76,15 @@ const BlogFlipbook = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [isFlipbookReady, setIsFlipbookReady] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 400, height: 500 });
-  const flipBook = useRef<any>(null);
+  interface FlipBookInstance {
+    pageFlip(): {
+      flipNext: () => void;
+      flipPrev: () => void;
+      flip: (pageIndex: number) => void;
+      getPageCount: () => number;
+    };
+  }
+  const flipBook = useRef<FlipBookInstance | null>(null);
   const flipbookContainer = useRef<HTMLDivElement>(null);
 
   // Random cover images from Unsplash
@@ -131,46 +139,57 @@ const BlogFlipbook = () => {
   useEffect(() => {
     // Add event listeners to prevent scrolling when interacting with flipbook
     const container = flipbookContainer.current;
-    if (container) {
-      container.addEventListener("wheel", preventScroll, { passive: false });
-      container.addEventListener("touchmove", preventScroll, {
-        passive: false,
-      });
+    if (!container) return;
+
+    // Only prevent wheel on desktop; allow touch scroll on mobile devices
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+
+    container.addEventListener("wheel", preventScroll, { passive: false });
+    if (!isTouchDevice) {
+      container.addEventListener("touchmove", preventScroll, { passive: false });
     }
 
     return () => {
-      if (container) {
-        container.removeEventListener("wheel", preventScroll);
+      container.removeEventListener("wheel", preventScroll);
+      if (!isTouchDevice) {
         container.removeEventListener("touchmove", preventScroll);
       }
     };
   }, [preventScroll]);
 
-  // Responsive dimensions - only set on client side
+  // Responsive dimensions using container width (better for mobile)
   useEffect(() => {
-    const getFlipbookDimensions = () => {
-      if (window.innerWidth < 640) {
-        return { width: 280, height: 380 };
-      } else if (window.innerWidth < 768) {
-        return { width: 350, height: 450 };
-      } else if (window.innerWidth < 1024) {
-        return { width: 450, height: 550 };
-      } else {
-        return { width: 500, height: 600 };
-      }
+    const containerElement = flipbookContainer.current;
+    if (!containerElement) return;
+
+    const updateDimensions = (containerWidth: number) => {
+      const width = Math.max(240, Math.min(Math.round(containerWidth), 600));
+      const height = Math.round(width * 1.33);
+      setDimensions({ width, height });
     };
 
-    setDimensions(getFlipbookDimensions());
+    // Initialize immediately
+    updateDimensions(containerElement.clientWidth);
 
-    const handleResize = () => {
-      setDimensions(getFlipbookDimensions());
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    // Observe container resize if supported; fallback to window resize
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          updateDimensions(entry.contentRect.width);
+        }
+      });
+      resizeObserver.observe(containerElement);
+      return () => resizeObserver.disconnect();
+    } else {
+      const handleResize = () => updateDimensions(containerElement.clientWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
   }, []);
 
-  const nextPage = () => {
+  const nextPage = useCallback(() => {
     if (flipBook.current && isFlipbookReady && currentPage < totalPages - 1) {
       try {
         flipBook.current.pageFlip().flipNext();
@@ -178,9 +197,9 @@ const BlogFlipbook = () => {
         console.error("Error flipping next page:", error);
       }
     }
-  };
+  }, [currentPage, isFlipbookReady, totalPages]);
 
-  const prevPage = () => {
+  const prevPage = useCallback(() => {
     if (flipBook.current && isFlipbookReady && currentPage > 0) {
       try {
         flipBook.current.pageFlip().flipPrev();
@@ -188,22 +207,7 @@ const BlogFlipbook = () => {
         console.error("Error flipping previous page:", error);
       }
     }
-  };
-
-  const goToPage = (pageIndex: number) => {
-    if (
-      flipBook.current &&
-      isFlipbookReady &&
-      pageIndex >= 0 &&
-      pageIndex < totalPages
-    ) {
-      try {
-        flipBook.current.pageFlip().flip(pageIndex);
-      } catch (error) {
-        console.error("Error going to page:", error);
-      }
-    }
-  };
+  }, [currentPage, isFlipbookReady]);
 
   const onPage = (e: { data: number }) => {
     setCurrentPage(e.data);
@@ -239,7 +243,7 @@ const BlogFlipbook = () => {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [currentPage, isFlipbookReady]);
+  }, [currentPage, isFlipbookReady, prevPage, nextPage]);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative py-8 px-4 overflow-hidden overscroll-none">
@@ -331,9 +335,9 @@ const BlogFlipbook = () => {
           width={dimensions.width}
           height={dimensions.height}
           size="stretch"
-          minWidth={280}
+          minWidth={240}
           maxWidth={600}
-          minHeight={380}
+          minHeight={320}
           maxHeight={700}
           maxShadowOpacity={0.5}
           showCover={true}
@@ -439,7 +443,7 @@ const BlogFlipbook = () => {
         </AnimatePresence>
 
         {/* Floating Page Counter */}
-      
+        
 
         {/* Keyboard Navigation Hint */}
         <motion.div

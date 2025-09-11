@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Mail,
   Phone,
-  ChevronRight,
   MapPin,
   Menu,
   X,
@@ -203,19 +202,33 @@ const useNavbarStyles = () => {
   }, []);
 };
 
+interface Category {
+  id: string;
+  name: string;
+  href: string;
+  subcategories?: Subcategory[];
+}
+
+interface Subcategory {
+  id: string;
+  name: string;
+  href: string;
+  image?: string;
+  description?: string;
+}
+
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
   useNavbarStyles();
 
   useEffect(() => {
-    setIsMounted(true);
-
     const handleScroll = () => {
       const scrolled = window.scrollY > 50;
       setIsScrolled(scrolled);
@@ -228,6 +241,27 @@ export default function Navbar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  // Fetch categories and extract all subcategories for products dropdown
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await fetch("/api/admin/navbar");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -252,7 +286,8 @@ export default function Navbar() {
   }, [pathname]);
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+    const next = !isMobileMenuOpen;
+    setIsMobileMenuOpen(next);
   };
 
   const toggleDropdown = (dropdownId: string) => {
@@ -266,7 +301,12 @@ export default function Navbar() {
 
   const navItems = [
     { href: "/", label: "Home" },
-    { href: "/products", label: "Products" },
+    { 
+      href: "/products", 
+      label: "Products", 
+      hasDropdown: true,
+      categories: categories 
+    },
     { href: "/branch", label: "Our Branches" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
@@ -302,17 +342,33 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center justify-center flex-1">
               <div className="flex items-center space-x-6">
                 {navItems.map((item) => (
-                  <NavLink
-                    key={item.href}
-                    href={item.href}
-                    isActive={
-                      pathname === item.href ||
-                      (item.href !== "/" && pathname.startsWith(item.href))
-                    }
-                    isScrolled={isScrolled}
-                  >
-                    {item.label}
-                  </NavLink>
+                  item.hasDropdown ? (
+                    <ProductsDropdown
+                      key={item.href}
+                      label={item.label}
+                      categories={categories}
+                      isActive={
+                        pathname === item.href ||
+                        (item.href !== "/" && pathname.startsWith(item.href))
+                      }
+                      isScrolled={isScrolled}
+                      openDropdown={openDropdown}
+                      setOpenDropdown={setOpenDropdown}
+                      loading={loadingCategories}
+                    />
+                  ) : (
+                    <NavLink
+                      key={item.href}
+                      href={item.href}
+                      isActive={
+                        pathname === item.href ||
+                        (item.href !== "/" && pathname.startsWith(item.href))
+                      }
+                      isScrolled={isScrolled}
+                    >
+                      {item.label}
+                    </NavLink>
+                  )
                 ))}
               </div>
             </div>
@@ -321,10 +377,10 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center space-x-3">
               {/* Contact Actions */}
               <ContactAction
-                href="mailto:sales@digitallink-sa.com"
+                href="mailto:sales@oasismarineuae.com"
                 icon={<Mail className="w-4 h-4" />}
                 label="Email"
-                tooltip="sales@digitallink-sa.com"
+                tooltip="sales@oasismarineuae.com"
                 isScrolled={isScrolled}
               />
               <ContactAction
@@ -503,7 +559,7 @@ export default function Navbar() {
                   </div>
 
                   {/* Authentication Section - Mobile */}
-                  <div className="border-t border-gray-200/30 pt-4 mb-6">
+                  <div className="mt-2 pt-4 border-t border-gray-200 mb-6">
                     {status === "loading" ? (
                       <div className="px-3 py-2 text-gray-500">Loading...</div>
                     ) : session ? (
@@ -558,53 +614,57 @@ export default function Navbar() {
                       </div>
                     ) : (
                       /* Unauthenticated User - Mobile */
-                      <div className="space-y-2">
-                        <Link
-                          href="/auth/signin"
-                          className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/60 rounded-md font-medium transition-all duration-300"
-                          onClick={toggleMobileMenu}
-                        >
-                          Sign In
-                        </Link>
-                        <Link
-                          href="/auth/signup"
-                          className="block px-3 py-2 mx-3 mt-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 font-medium"
-                          onClick={toggleMobileMenu}
-                        >
-                          Sign Up
-                        </Link>
+                      <div className="px-3">
+                        <div className="text-xs uppercase tracking-wide text-gray-500 mb-3">Account</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Link
+                            href="/auth/signin"
+                            className="inline-flex items-center justify-center h-10 rounded-full border border-gray-300 text-gray-800 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors font-medium"
+                            onClick={toggleMobileMenu}
+                            aria-label="Sign in"
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            href="/auth/signup"
+                            className="inline-flex items-center justify-center h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                            onClick={toggleMobileMenu}
+                            aria-label="Sign up"
+                          >
+                            Sign Up
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Contact Info */}
+                  {/* Contact Info - icons only, horizontal */}
                   <div className="border-t border-gray-200/30 pt-4">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                      Contact Information
-                    </h4>
-                    <div className="space-y-3">
-                      <MobileContact
-                        href="mailto:sales@digitallink-sa.com"
-                        icon={<Mail className="w-4 h-4" />}
-                        title="Email Us"
-                        subtitle="sales@digitallink-sa.com"
+                    <div className="flex items-center justify-start gap-3">
+                      <Link
+                        href="mailto:sales@oasismarineuae.com"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-blue-600 ring-1 ring-gray-200 hover:bg-gray-50"
                         onClick={toggleMobileMenu}
-                      />
-                      <MobileContact
-                        href="tel:+966597015415"
-                        icon={<Phone className="w-4 h-4" />}
-                        title="Call Us"
-                        subtitle="+966 59 701 5415"
+                        title="Email"
+                      >
+                        <Mail className="w-5 h-5" />
+                      </Link>
+                      <Link
+                        href="tel:+971563096262"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-blue-600 ring-1 ring-gray-200 hover:bg-gray-50"
                         onClick={toggleMobileMenu}
-                      />
-                      <MobileContact
+                        title="Call"
+                      >
+                        <Phone className="w-5 h-5" />
+                      </Link>
+                      <Link
                         href="https://www.google.com/maps/search/?api=1&query=Olaya+Street,+Riyadh,+Saudi+Arabia"
-                        icon={<MapPin className="w-4 h-4" />}
-                        title="Visit Us"
-                        subtitle="Olaya Street, Riyadh"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-blue-600 ring-1 ring-gray-200 hover:bg-gray-50"
                         onClick={toggleMobileMenu}
-                        external
-                      />
+                        target="_blank" rel="noopener noreferrer" title="Location"
+                      >
+                        <MapPin className="w-5 h-5" />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -723,39 +783,133 @@ function MobileNavLink({
   );
 }
 
-// MobileContact component
-function MobileContact({
-  href,
-  icon,
-  title,
-  subtitle,
-  onClick,
-  external = false,
+// ProductsDropdown component - Modified to remove the "Browse by Main Categories" section
+// ProductsDropdown component - Modified with smaller links and single View All Products button
+function ProductsDropdown({
+  label,
+  categories,
+  isActive,
+  isScrolled,
+  openDropdown,
+  setOpenDropdown,
+  loading,
 }: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  onClick: () => void;
-  external?: boolean;
+  label: string;
+  categories: Category[];
+  isActive: boolean;
+  isScrolled: boolean;
+  openDropdown: string | null;
+  setOpenDropdown: (id: string | null) => void;
+  loading: boolean;
 }) {
+  const dropdownId = "products";
+  const isOpen = openDropdown === dropdownId;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = () => {
+    setOpenDropdown(dropdownId);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    // Check if mouse is leaving the dropdown area
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(e.relatedTarget as Node)
+    ) {
+      setOpenDropdown(null);
+    }
+  };
+
   return (
-    <Link
-      href={href}
-      className="flex items-center p-3 rounded-xl hover:bg-gray-50/60 transition-all duration-200 ease-out group"
-      onClick={onClick}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    <div 
+      className="relative dropdown-container"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      ref={dropdownRef}
     >
-      <div className="flex-shrink-0 p-2 rounded-lg bg-gray-50/60 text-gray-600 group-hover:bg-gray-100/60">
-        {icon}
+      <button
+        className={`nav-link-enhanced text-sm font-medium transition-all duration-300 ease-out flex items-center ${
+          !isScrolled ? "transparent" : "scrolled"
+        } ${isActive ? "active" : ""} ${
+          isScrolled
+            ? `${
+                isActive ? "text-gray-600" : "text-gray-700 hover:text-gray-900"
+              }`
+            : `${isActive ? "text-gray-300" : "text-white hover:text-gray-200"}`
+        }`}
+      >
+        {label}
+        <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* Mega Menu Dropdown */}
+      <div
+        className={`dropdown-menu ${isOpen ? "show" : "hide"}`}
+        style={{
+          position: "fixed",
+          top: "64px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          right: "auto",
+          minWidth: "90vw",
+          maxWidth: "1200px",
+          width: "auto",
+          zIndex: 60,
+        }}
+        onMouseLeave={() => setOpenDropdown(null)}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">Our Products</h2>
+          </div>
+          
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+              <span className="ml-3 text-lg text-gray-600">Loading...</span>
+            </div>
+          ) : categories.length > 0 ? (
+            <div className="space-y-4">
+              {/* Horizontal layout for all subcategories */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-800 text-base">All Product Categories</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+                  {categories.flatMap((category) =>
+                    category.subcategories?.map((subcategory) => (
+                      <Link
+                        key={subcategory.id}
+                        href={subcategory.href}
+                        className="block p-2 text-center text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded border border-gray-100 hover:border-blue-200 transition-colors"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        {subcategory.name}
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Available</h3>
+              <p className="text-gray-500">Check back later for our latest products</p>
+            </div>
+          )}
+
+          {/* Single View All Products button */}
+          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+            <Link
+              href="/products"
+            className="inline-flex items-center gap-2 px-5 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
+
+              onClick={() => setOpenDropdown(null)}
+            >
+              View All Products
+            </Link>
+          </div>
+        </div>
       </div>
-      <div className="ml-3 flex-1">
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{subtitle}</p>
-      </div>
-      {external && (
-        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-      )}
-    </Link>
+    </div>
   );
 }
+// (mobile-only helper components removed; simplified flow uses built-in elements)
