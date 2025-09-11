@@ -860,7 +860,7 @@ function ProductsDropdown({
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Our Products</h2>
+            <h2 className="text-xl text-semibold  text-gray-700">Our Products</h2>
           </div>
           
           {loading ? (
@@ -872,7 +872,7 @@ function ProductsDropdown({
             <div className="space-y-4">
               {/* Horizontal layout for all subcategories */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-gray-800 text-base">All Product Categories</h3>
+                <h3 className="text-semibold  text-gray-700 ">All Product Categories</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                   {categories.flatMap((category) =>
                     category.subcategories?.map((subcategory) => (
