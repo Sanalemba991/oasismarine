@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Banner() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState(0);
 
@@ -75,20 +74,7 @@ export default function Banner() {
   };
 
   // Handle previous button click
-  const handlePrevious = () => {
-    setDirection(-1); // Left to right direction
-    setCurrentImageIndex(
-      currentImageIndex === 0 ? banners.length - 1 : currentImageIndex - 1
-    );
-  };
-
-  // Handle next button click
-  const handleNext = () => {
-    setDirection(1); // Right to left direction
-    setCurrentImageIndex(
-      currentImageIndex === banners.length - 1 ? 0 : currentImageIndex + 1
-    );
-  };
+ 
 
   // Animation variants
   const bannerVariants = {
@@ -132,19 +118,11 @@ export default function Banner() {
     },
   };
 
-  const arrowVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.5 },
-    },
-  };
+  
 
   return (
     <div
       className="w-full relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Banner Container - Full screen height */}
       <div className="relative w-full h-screen min-h-[600px] overflow-hidden">
@@ -196,61 +174,7 @@ export default function Banner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Arrows - Animate on hover */}
-        <AnimatePresence>
-          {isHovered && (
-            <>
-              <motion.button
-                variants={arrowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                onClick={handlePrevious}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full z-10 transition-all duration-300"
-                aria-label="Previous slide"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </motion.button>
-              <motion.button
-                variants={arrowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                onClick={handleNext}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full z-10 transition-all duration-300"
-                aria-label="Next slide"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </motion.button>
-            </>
-          )}
-        </AnimatePresence>
+        
 
         {/* Bottom Indicators - Centered */}
         <div className="absolute bottom-6 left-6 flex space-x-2 z-10">
@@ -261,7 +185,7 @@ export default function Banner() {
               className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                 index === currentImageIndex
                   ? "bg-white scale-110"
-                  : "bg-white/50 hover:bg-white/80"
+                  : "bg-white/50"
               } ${clickedIndex === index ? "scale-125" : ""}`}
               aria-label={`Go to slide ${index + 1}`}
             />

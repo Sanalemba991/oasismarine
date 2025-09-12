@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -15,11 +15,10 @@ export async function GET(
       );
     }
 
-
     const product = await prisma.product.findUnique({
       where: {
         id: id,
-        isActive: true // Only return active products for public view
+        isActive: true
       },
       include: {
         category: true,
@@ -32,22 +31,6 @@ export async function GET(
         { error: 'Product not found' },
         { status: 404 }
       );
-    }
-
-    // Increment view count
-    try {
-   
-      await prisma.product.update({
-        where: { id },
-        data: {
-          viewCount: {
-            increment: 1
-          }
-        }
-      });
-    } catch (viewError) {
-      console.warn('Failed to update view count:', viewError);
-      // Don't fail the request if view count update fails
     }
 
     return NextResponse.json({ product });

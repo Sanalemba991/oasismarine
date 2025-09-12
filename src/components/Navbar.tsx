@@ -223,10 +223,16 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false); // Add initialization state
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
   useNavbarStyles();
+
+  // Initialize component - prevent automatic dropdown opening
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -331,7 +337,9 @@ export default function Navbar() {
                   alt="Oasis Marine"
                   width={900}
                   height={200}
-                  className="h-10 w-auto logo-transition group-hover:scale-105"
+                  className={`h-10 w-auto logo-transition group-hover:scale-105 ${
+                    isScrolled ? "" : "brightness-0 invert"
+                  }`}
                   priority
                 />
               </Link>
@@ -354,6 +362,7 @@ export default function Navbar() {
                       openDropdown={openDropdown}
                       setOpenDropdown={setOpenDropdown}
                       loading={loadingCategories}
+                      isInitialized={isInitialized} // Pass initialization state
                     />
                   ) : (
                     <NavLink
@@ -779,8 +788,7 @@ function MobileNavLink({
   );
 }
 
-// ProductsDropdown component - Modified to remove the "Browse by Main Categories" section
-// ProductsDropdown component - Modified with smaller links and single View All Products button
+// ProductsDropdown component - Fixed to prevent auto-opening
 function ProductsDropdown({
   label,
   categories,
@@ -789,6 +797,7 @@ function ProductsDropdown({
   openDropdown,
   setOpenDropdown,
   loading,
+  isInitialized,
 }: {
   label: string;
   categories: Category[];
@@ -797,13 +806,17 @@ function ProductsDropdown({
   openDropdown: string | null;
   setOpenDropdown: (id: string | null) => void;
   loading: boolean;
+  isInitialized: boolean;
 }) {
   const dropdownId = "products";
   const isOpen = openDropdown === dropdownId;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = () => {
-    setOpenDropdown(dropdownId);
+    // Only allow dropdown to open after component is fully initialized
+    if (isInitialized) {
+      setOpenDropdown(dropdownId);
+    }
   };
 
   const handleMouseLeave = (e: React.MouseEvent) => {
@@ -816,6 +829,13 @@ function ProductsDropdown({
     }
   };
 
+  const handleClick = () => {
+    // Handle click for mobile/touch devices
+    if (isInitialized) {
+      setOpenDropdown(isOpen ? null : dropdownId);
+    }
+  };
+
   return (
     <div
       className="relative dropdown-container"
@@ -824,6 +844,7 @@ function ProductsDropdown({
       ref={dropdownRef}
     >
       <button
+        onClick={handleClick}
         className={`nav-link-enhanced text-sm font-medium transition-all duration-300 ease-out flex items-center ${
           !isScrolled ? "transparent" : "scrolled"
         } ${isActive ? "active" : ""} ${
@@ -842,81 +863,82 @@ function ProductsDropdown({
         />
       </button>
 
-      {/* Mega Menu Dropdown */}
-      <div
-        className={`dropdown-menu ${isOpen ? "show" : "hide"}`}
-        style={{
-          position: "fixed",
-          top: "64px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          right: "auto",
-          minWidth: "90vw",
-          maxWidth: "1200px",
-          width: "auto",
-          zIndex: 60,
-        }}
-        onMouseLeave={() => setOpenDropdown(null)}
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-            <h2 className="text-xl text-semibold  text-gray-700">
-              Our Products
-            </h2>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-              <span className="ml-3 text-lg text-gray-600">Loading...</span>
+      {/* Mega Menu Dropdown - Only show if initialized and open */}
+      {isInitialized && (
+        <div
+          className={`dropdown-menu ${isOpen ? "show" : "hide"}`}
+          style={{
+            position: "fixed",
+            top: "64px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            right: "auto",
+            minWidth: "90vw",
+            maxWidth: "1200px",
+            width: "auto",
+            zIndex: 60,
+          }}
+          onMouseLeave={() => setOpenDropdown(null)}
+        >
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+              <h2 className="text-xl text-semibold  text-gray-700">
+                Our Products
+              </h2>
             </div>
-          ) : categories.length > 0 ? (
-            <div className="space-y-4">
-              {/* Horizontal layout for all subcategories */}
-              <div className="space-y-3">
-                <h3 className="text-semibold  text-gray-700 ">
-                  All Product Categories
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-                  {categories.flatMap((category) =>
-                    category.subcategories?.map((subcategory) => (
-                      <Link
-                        key={subcategory.id}
-                        href={subcategory.href}
-                        className="block p-2 text-center text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded border border-gray-100 hover:border-blue-200 transition-colors"
-                        onClick={() => setOpenDropdown(null)}
-                      >
-                        {subcategory.name}
-                      </Link>
-                    ))
-                  )}
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+                <span className="ml-3 text-lg text-gray-600">Loading...</span>
+              </div>
+            ) : categories.length > 0 ? (
+              <div className="space-y-4">
+                {/* Horizontal layout for all subcategories */}
+                <div className="space-y-3">
+                  <h3 className="text-semibold  text-gray-700 ">
+                    All Product Categories
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+                    {categories.flatMap((category) =>
+                      category.subcategories?.map((subcategory) => (
+                        <Link
+                          key={subcategory.id}
+                          href={subcategory.href}
+                          className="block p-2 text-center text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded border border-gray-100 hover:border-blue-200 transition-colors"
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          {subcategory.name}
+                        </Link>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Products Available
-              </h3>
-              <p className="text-gray-500">
-                Check back later for our latest products
-              </p>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Products Available
+                </h3>
+                <p className="text-gray-500">
+                  Check back later for our latest products
+                </p>
+              </div>
+            )}
 
-          {/* Single View All Products button */}
-          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 px-5 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
-              onClick={() => setOpenDropdown(null)}
-            >
-              View All Products
-            </Link>
+            {/* Single View All Products button */}
+            <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-5 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
+                onClick={() => setOpenDropdown(null)}
+              >
+                View All Products
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
-// (mobile-only helper components removed; simplified flow uses built-in elements)
