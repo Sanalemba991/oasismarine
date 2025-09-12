@@ -226,21 +226,27 @@ const Footer = () => {
           <div className="text-center sm:text-left">
             <h3 className="text-sm font-medium text-white mb-2">Contact Us</h3>
             <ul className="space-y-3 text-xs text-gray-300">
-              {/* Location with clickable map icon */}
+              {/* Location with clickable map icon - Responsive text */}
               <li className="text-center sm:text-left">
                 <button
                   onClick={() => {
-                    const encodedAddress = encodeURIComponent(
-                      "Olaya Street, Riyadh, Saudi Arabia"
-                    );
-                    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                    const googleMapsUrl = `https://www.google.com/maps/place/Oasis+Marine+Trading+LLC/@25.286978,55.383382,6z/data=!4m6!3m5!1s0x3e5f5de30e5a6283:0x14805290c4c15df6!8m2!3d25.286978!4d55.3833818!16s%2Fg%2F11vlm3tdjq?hl=en&entry=ttu&g_ep=EgoyMDI1MDkwOS4wIKXMDSoASAFQAw%3D%3D`;
                     window.open(googleMapsUrl, "_blank");
                   }}
-                  className="inline-flex items-center gap-2 hover:text-blue-300 transition-colors duration-300 group"
+                  className="inline-flex items-start gap-2 hover:text-blue-300 transition-colors duration-300 group text-left"
                 >
-                  <MapPin className="w-4 h-4 text-blue-900 flex-shrink-0" />
-                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer">
-                    Olaya Street, Riyadh, Saudi Arabia
+                  <MapPin className="w-4 h-4 text-blue-900 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer leading-relaxed">
+                    <span className="block sm:inline">
+                      5 - Street 2 11th St
+                    </span>
+                    <span className="block sm:inline sm:ml-1">
+                      - Al Qusais - Dubai
+                    </span>
+
+                    <span className="block sm:inline sm:ml-1">
+                      - United Arab Emirates
+                    </span>
                   </span>
                 </button>
               </li>
@@ -261,7 +267,7 @@ const Footer = () => {
               {/* Phone */}
               <li className="text-center sm:text-left">
                 <a
-                  href="tel:+966597015415"
+                  href="tel:+971563096262"
                   className="inline-flex items-center gap-2 hover:text-blue-900 transition-colors duration-300 group"
                 >
                   <Phone className="w-4 h-4 text-blue-900 flex-shrink-0" />

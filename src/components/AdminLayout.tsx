@@ -29,8 +29,9 @@ const sidebarItems = [
   { name: 'Users', href: '/admin/users', icon: MdPeople },
   { name: 'Navbar', href: '/admin/navbar', icon: MdNavigation },
   { name: 'Products', href: '/admin/products', icon: MdInventory },
-  { name: 'Contacts', href: '/admin/contacts', icon: MdContacts },
-  { name: 'Stats', href: '/admin/stats', icon: MdBarChart },
+  { name: 'Product Enquiry', href: '/admin/contacts', icon: MdContacts },
+  { name: 'Conatcts Details', href: '/admin/conatcts-details', icon: FaAnchor },
+  { name: 'Stats', href: '/admin/stats', icon: MdBarChart }
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

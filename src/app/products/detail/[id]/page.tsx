@@ -2,8 +2,10 @@
 
 import { useState, useEffect, Fragment, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import ContactModal from "@/components/ContactModal";
 import {
   HeartIcon,
   ShareIcon,
@@ -91,6 +93,7 @@ export default function ProductDetail({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -105,6 +108,7 @@ export default function ProductDetail({
   const [copied, setCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   // Initialize params
   useEffect(() => {
@@ -217,7 +221,7 @@ export default function ProductDetail({
 
     try {
       // Function to convert image to base64
-      const getBase64Image = async (imagePath) => {
+      const getBase64Image = async (imagePath: string | URL | Request) => {
         try {
           const response = await fetch(imagePath);
           const blob = await response.blob();
@@ -1521,14 +1525,13 @@ export default function ProductDetail({
                 <motion.button
                   onClick={downloadProductInfo}
                   disabled={isDownloading}
-                  className="border border-blue-600 text-blue-600 py-1 px-3 rounded-md text-xs font-medium transition-all duration-300 flex items-center justify-center hover:bg-blue-600 hover:text-white mx-auto"
-
+                  className="border border-blue-600 text-blue-600 py-1 px-3 rounded-md text-xs font-medium transition-all duration-300 flex items-center justify-center hover:bg-blue-600 hover:text-white"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   {isDownloading ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent mr-2"></div>
                       <span>Preparing Download...</span>
                     </>
                   ) : (
@@ -1537,6 +1540,25 @@ export default function ProductDetail({
                       <span>Download Complete Info</span>
                     </>
                   )}
+                </motion.button>
+
+                {/* Contact Us Button */}
+                <motion.button
+                  onClick={() => {
+                    if (!session) {
+                      // Redirect to sign in page if not logged in
+                      router.push('/auth/signin');
+                    } else {
+                      // Open contact modal if logged in
+                      setIsContactModalOpen(true);
+                    }
+                  }}
+                  className="border border-green-600 text-green-600 py-1 px-3 rounded-md text-xs font-medium transition-all duration-300 flex items-center justify-center hover:bg-green-600 hover:text-white"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
+                  <span>Contact Us</span>
                 </motion.button>
 
                 {/* PDF Catalog Button */}
@@ -1648,6 +1670,17 @@ export default function ProductDetail({
           </div>
         </Dialog>
       </Transition>
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        product={product ? {
+          id: product.id,
+          name: product.name,
+          cardImage: product.cardImage
+        } : undefined}
+      />
     </div>
   );
 }

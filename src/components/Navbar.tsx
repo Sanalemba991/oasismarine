@@ -262,7 +262,6 @@ export default function Navbar() {
     fetchCategories();
   }, []);
 
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -301,11 +300,11 @@ export default function Navbar() {
 
   const navItems = [
     { href: "/", label: "Home" },
-    { 
-      href: "/products", 
-      label: "Products", 
+    {
+      href: "/products",
+      label: "Products",
       hasDropdown: true,
-      categories: categories 
+      categories: categories,
     },
     { href: "/branch", label: "Our Branches" },
     { href: "/about", label: "About Us" },
@@ -341,7 +340,7 @@ export default function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center justify-center flex-1">
               <div className="flex items-center space-x-6">
-                {navItems.map((item) => (
+                {navItems.map((item) =>
                   item.hasDropdown ? (
                     <ProductsDropdown
                       key={item.href}
@@ -369,7 +368,7 @@ export default function Navbar() {
                       {item.label}
                     </NavLink>
                   )
-                ))}
+                )}
               </div>
             </div>
 
@@ -391,7 +390,7 @@ export default function Navbar() {
                 isScrolled={isScrolled}
               />
               <ContactAction
-                href="https://www.google.com/maps/search/?api=1&query=Olaya+Street,+Riyadh,+Saudi+Arabia"
+                href="https://www.google.com/maps/place/Oasis+Marine+Trading+LLC/@25.286978,55.383382,6z/data=!4m6!3m5!1s0x3e5f5de30e5a6283:0x14805290c4c15df6!8m2!3d25.286978!4d55.3833818!16s%2Fg%2F11vlm3tdjq?hl=en&entry=ttu&g_ep=EgoyMDI1MDkwOS4wIKXMDSoASAFQAw%3D%3D"
                 icon={<MapPin className="w-4 h-4" />}
                 label="Location"
                 tooltip="Olaya Street, Riyadh"
@@ -478,23 +477,13 @@ export default function Navbar() {
                   <div className="flex items-center space-x-3">
                     <Link
                       href="/auth/signin"
-                      className={`auth-button px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ease-out ${
-                        isScrolled
-                          ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100/60"
-                          : "text-white hover:text-gray-200 hover:bg-white/20"
-                      }`}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/auth/signup"
                       className={`auth-button border-2 py-2 px-4 font-medium transition-colors duration-300 flex items-center justify-center text-sm  ${
                         isScrolled
                           ? "border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
                           : "border-white text-white hover:bg-white hover:text-blue-600"
                       }`}
                     >
-                      Sign Up
+                      Sign In
                     </Link>
                   </div>
                 )}
@@ -615,24 +604,29 @@ export default function Navbar() {
                     ) : (
                       /* Unauthenticated User - Mobile */
                       <div className="px-3">
-                        <div className="text-xs uppercase tracking-wide text-gray-500 mb-3">Account</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Link
-                            href="/auth/signin"
-                            className="inline-flex items-center justify-center h-10 rounded-full border border-gray-300 text-gray-800 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors font-medium"
-                            onClick={toggleMobileMenu}
-                            aria-label="Sign in"
-                          >
-                            Sign In
-                          </Link>
-                          <Link
-                            href="/auth/signup"
-                            className="inline-flex items-center justify-center h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium shadow-sm"
-                            onClick={toggleMobileMenu}
-                            aria-label="Sign up"
-                          >
-                            Sign Up
-                          </Link>
+                        <div className="text-xs uppercase tracking-wide text-gray-500 mb-3">
+                          Account
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-white/70 p-3 shadow-sm">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+                              <User className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 leading-tight">You&apos;re not signed in</p>
+                              <p className="text-xs text-gray-500 leading-tight">Access your profile and manage orders</p>
+                            </div>
+                          </div>
+                          <div className="flex">
+                            <Link
+                              href="/auth/signin"
+                              className="w-full inline-flex items-center justify-center h-9 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                              onClick={toggleMobileMenu}
+                              aria-label="Sign in"
+                            >
+                              Sign In
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -658,10 +652,12 @@ export default function Navbar() {
                         <Phone className="w-5 h-5" />
                       </Link>
                       <Link
-                        href="https://www.google.com/maps/search/?api=1&query=Olaya+Street,+Riyadh,+Saudi+Arabia"
+                        href="https://www.google.com/maps/place/Oasis+Marine+Trading+LLC/@25.286978,55.383382,6z/data=!4m6!3m5!1s0x3e5f5de30e5a6283:0x14805290c4c15df6!8m2!3d25.286978!4d55.3833818!16s%2Fg%2F11vlm3tdjq?hl=en&entry=ttu&g_ep=EgoyMDI1MDkwOS4wIKXMDSoASAFQAw%3D%3D"
                         className="inline-flex items-center justify-center w-10 h-10 rounded-full text-blue-600 ring-1 ring-gray-200 hover:bg-gray-50"
                         onClick={toggleMobileMenu}
-                        target="_blank" rel="noopener noreferrer" title="Location"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Location"
                       >
                         <MapPin className="w-5 h-5" />
                       </Link>
@@ -821,7 +817,7 @@ function ProductsDropdown({
   };
 
   return (
-    <div 
+    <div
       className="relative dropdown-container"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -839,7 +835,11 @@ function ProductsDropdown({
         }`}
       >
         {label}
-        <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {/* Mega Menu Dropdown */}
@@ -860,9 +860,11 @@ function ProductsDropdown({
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-            <h2 className="text-xl text-semibold  text-gray-700">Our Products</h2>
+            <h2 className="text-xl text-semibold  text-gray-700">
+              Our Products
+            </h2>
           </div>
-          
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
@@ -872,7 +874,9 @@ function ProductsDropdown({
             <div className="space-y-4">
               {/* Horizontal layout for all subcategories */}
               <div className="space-y-3">
-                <h3 className="text-semibold  text-gray-700 ">All Product Categories</h3>
+                <h3 className="text-semibold  text-gray-700 ">
+                  All Product Categories
+                </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                   {categories.flatMap((category) =>
                     category.subcategories?.map((subcategory) => (
@@ -891,8 +895,12 @@ function ProductsDropdown({
             </div>
           ) : (
             <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Available</h3>
-              <p className="text-gray-500">Check back later for our latest products</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No Products Available
+              </h3>
+              <p className="text-gray-500">
+                Check back later for our latest products
+              </p>
             </div>
           )}
 
@@ -900,8 +908,7 @@ function ProductsDropdown({
           <div className="mt-6 pt-4 border-t border-gray-200 text-center">
             <Link
               href="/products"
-            className="inline-flex items-center gap-2 px-5 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
-
+              className="inline-flex items-center gap-2 px-5 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
               onClick={() => setOpenDropdown(null)}
             >
               View All Products
