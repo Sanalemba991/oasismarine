@@ -270,7 +270,7 @@ const BlogFlipbook = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold text-gray-900 mt-6 mb-6 leading-tight"
+            className="text-3xl md:text-4xl font-bold text-gray-900 mt-6 mb-6 leading-tight"
           >
             <span className="text-[#1e3a8a]">Oasis Marine</span> Trading LLC <br />
             Digital Product Catalog

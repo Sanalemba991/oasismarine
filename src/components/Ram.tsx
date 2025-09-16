@@ -86,8 +86,8 @@ const Ram = () => {
         {[
           { src: RAms, alt: "Quality Building Materials", text: "Quality Building Materials" },
           { src: SAms, alt: "Reliable Construction Supplies", text: "Reliable Construction Supplies" },
-          { src: DAms, alt: "Premium Building Solution", text: "Premium Building Solution" },
-          { src: FAms, alt: "Building the Future Together", text: "Building the Future Together" }
+          { src: FAms, alt: "Premium Building Solution", text: "Premium Building Solution" },
+          { src: DAms, alt: "Building the Future Together", text: "Building the Future Together" }
         ].map((item, index) => (
           <AnimatedSection 
             key={index}

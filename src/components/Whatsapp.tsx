@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+import React, { useState, useEffect, use } from 'react';
 import { Phone, Mail, Plus, X } from 'lucide-react';
 
 const Whatsapp = () => {
@@ -51,20 +52,20 @@ const Whatsapp = () => {
   };
 
   const handleWhatsApp = () => {
-    const phoneNumber = '++966 59 701 5415';
-    const message = 'Hello DigitalLink! I would like to get in touch.';
+    const phoneNumber = '+971563096262';
+    const message = 'Hello Oasis Marine UAE! I would like to get in touch.';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleCall = () => {
-    window.open('tel:++966 59 701 5415', '_self');
+    window.open('tel:+971563096262', '_self');
   };
 
   const handleEmail = () => {
-    const email = 'sales@digitallink-sa.com';
+    const email = 'sales@oasismarineuae.com';
     const subject = 'Inquiry from Website';
-    const body = 'Hello Digital Link Team,\n\nI would like to get in touch regarding...';
+    const body = 'Hello Oasis Marine UAE Team,\n\nI would like to get in touch regarding...';
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoUrl, '_self');
   };

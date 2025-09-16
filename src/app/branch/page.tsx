@@ -3,14 +3,16 @@ import { Metadata } from "next";
 import Branch from "../../components/Branch";
 
 export const metadata: Metadata = {
-  title: 'Careers at Lovosis Technologies Pvt Ltd | Join Our Team',
-  description: 'Explore exciting career opportunities at Lovosis Technologies. Join our innovative team and be part of cutting-edge technology solutions.',
-  keywords: 'careers, jobs, employment, technology jobs, IT careers, Lovosis Technologies careers',
+  title: 'Our Branches | Oasis Marine Trading LLC',
+  description:
+    'Discover Oasis Marine Trading LLC branches across the UAE, providing reliable marine and industrial solutions with a commitment to excellence.',
+  keywords: 'Oasis Marine UAE branches, marine trading locations, industrial solutions UAE, Oasis Marine offices',
   openGraph: {
-    title: 'Careers at Lovosis Technologies Pvt Ltd | Join Our Team',
-    description: 'Explore exciting career opportunities at Lovosis Technologies. Join our innovative team and be part of cutting-edge technology solutions.',
+    title: 'Our Branches | Oasis Marine Trading LLC',
+    description:
+      'Discover Oasis Marine Trading LLC branches across the UAE, providing reliable marine and industrial solutions with a commitment to excellence.',
     type: 'website',
-    url: 'https://lovosis.in/careers',
+    url: 'https://oasismarineuae.com/branches',
   },
   robots: {
     index: true,
@@ -18,7 +20,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CareersPage() {
+
+export default function BranchPage() {
   return (
     <>
 <Branch/>

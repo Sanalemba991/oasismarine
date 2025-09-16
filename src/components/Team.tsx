@@ -4,8 +4,9 @@ import { Video } from "lucide-react";
 import CEO from "../app/assets/ceo/ceo.png";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Banner from "../app/assets/branch/History.png";
+import Banner from "../app/assets/banner/About Us.jpg";
 import Boat from "../app/assets/boat/boat.png";
+import About from "../app/assets/boat/About.png";
 const Team = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -240,7 +241,7 @@ const Team = () => {
                     },
                   },
                 }}
-                className="text-lg sm:text-xl lg:text-2xl text-gray-100 mb-6 leading-relaxed max-w-2xl drop-shadow-md"
+                className="text-sm sm:text-base lg:text-lg text-gray-200 mb-8 leading-relaxed max-w-2xl drop-shadow-md"
               >
                 We are a team of dedicated professionals driven by a passion for
                 success and innovation.
@@ -384,7 +385,7 @@ const Team = () => {
             >
               {/* Using a high-quality marine equipment image from Unsplash */}
               <img
-                src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                src={About.src}
                 alt="Marine and Oilfield Equipment"
                 className="w-full h-60 md:h-72 lg:h-80 object-cover transition-all duration-700 transform hover:scale-105"
               />
@@ -530,7 +531,7 @@ const Team = () => {
               className="flex-1 p-8 lg:p-12"
             >
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-8">
-                Our Key Sustainability Initiatives
+                Our Key Sustainability <span className="text-[#1e3a8a]">Initiatives</span>
               </h2>
 
               <div className="space-y-7">

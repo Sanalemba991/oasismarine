@@ -86,45 +86,7 @@ const Footer = () => {
       {/* Content with relative positioning to stay above overlay */}
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
         {/* Newsletter - Smaller */}
-        <div className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="max-w-lg mx-auto text-center px-2">
-            <h3 className="text-sm sm:text-base font-medium text-white mb-1">
-              Subscribe to our Newsletter
-            </h3>
-            <p className="text-xs text-gray-300 mb-2">
-              Stay updated with our latest news
-            </p>
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col sm:flex-row gap-1 max-w-sm mx-auto"
-            >
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-gray-800 bg-opacity-90 border border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-white text-white placeholder-gray-300"
-                required
-              />
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="px-3 py-1 text-xs bg-white text-black rounded hover:bg-blue-400 hover:text-white transition-all duration-300 disabled:opacity-50"
-              >
-                {status === "loading" ? "Subscribing..." : "Subscribe"}
-              </button>
-            </form>
-            {message && (
-              <p
-                className={`mt-1 text-xs ${
-                  status === "success" ? "text-green-300" : "text-red-300"
-                }`}
-              >
-                {message}
-              </p>
-            )}
-          </div>
-        </div>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2">
           {/* Brand Section - Larger logo */}
@@ -149,13 +111,13 @@ const Footer = () => {
             </p>
             <div className="flex justify-center sm:justify-start space-x-2">
               <a
-                href="https://www.facebook.com/profile.php?id=100087290161175&mibextid=ZbWKwL"
+                href=""
                 className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
               >
                 <FontAwesomeIcon icon={faFacebook} className="h-4 w-4" />
               </a>
               <a
-                href="https://www.instagram.com/digitallinktechnologyllc/"
+                href=""
                 className="text-gray-300 hover:text-pink-500 transition-colors duration-300"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -226,21 +188,27 @@ const Footer = () => {
           <div className="text-center sm:text-left">
             <h3 className="text-sm font-medium text-white mb-2">Contact Us</h3>
             <ul className="space-y-3 text-xs text-gray-300">
-              {/* Location with clickable map icon */}
+              {/* Location with clickable map icon - Responsive text */}
               <li className="text-center sm:text-left">
                 <button
                   onClick={() => {
-                    const encodedAddress = encodeURIComponent(
-                      "Olaya Street, Riyadh, Saudi Arabia"
-                    );
-                    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                    const googleMapsUrl = `https://www.google.com/maps/place/Oasis+Marine+Trading+LLC/@25.286978,55.383382,6z/data=!4m6!3m5!1s0x3e5f5de30e5a6283:0x14805290c4c15df6!8m2!3d25.286978!4d55.3833818!16s%2Fg%2F11vlm3tdjq?hl=en&entry=ttu&g_ep=EgoyMDI1MDkwOS4wIKXMDSoASAFQAw%3D%3D`;
                     window.open(googleMapsUrl, "_blank");
                   }}
-                  className="inline-flex items-center gap-2 hover:text-blue-300 transition-colors duration-300 group"
+                  className="inline-flex items-start gap-2 hover:text-blue-400 transition-colors duration-300 group text-left"
                 >
-                  <MapPin className="w-4 h-4 text-blue-900 flex-shrink-0" />
-                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer">
-                    Olaya Street, Riyadh, Saudi Arabia
+                  <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer leading-relaxed">
+                    <span className="block sm:inline">
+                      5 - Street 2 11th St
+                    </span>
+                    <span className="block sm:inline sm:ml-1">
+                      - Al Qusais - Dubai
+                    </span>
+
+                    <span className="block sm:inline sm:ml-1">
+                      - United Arab Emirates
+                    </span>
                   </span>
                 </button>
               </li>
@@ -249,10 +217,10 @@ const Footer = () => {
               <li className="text-center sm:text-left">
                 <a
                   href="mailto:sales@oasismarineuae.com"
-                  className="inline-flex items-center gap-2 hover:text-blue-300 transition-colors duration-300 group"
+                  className="inline-flex items-center gap-2 hover:text-blue-400 transition-colors duration-300 group"
                 >
-                  <Mail className="w-4 h-4 text-blue-900 flex-shrink-0" />
-                  <span className="text-xs hover:text-blue-300 group-hover:no-underline cursor-pointer">
+                  <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer">
                     sales@oasismarineuae.com
                   </span>
                 </a>
@@ -261,11 +229,11 @@ const Footer = () => {
               {/* Phone */}
               <li className="text-center sm:text-left">
                 <a
-                  href="tel:+966597015415"
-                  className="inline-flex items-center gap-2 hover:text-blue-900 transition-colors duration-300 group"
+                  href="tel:+971563096262"
+                  className="inline-flex items-center gap-2 hover:text-blue-400 transition-colors duration-300 group"
                 >
-                  <Phone className="w-4 h-4 text-blue-900 flex-shrink-0" />
-                  <span className="text-xs hover:text-blue-300 group-hover:no-underline cursor-pointer">
+                  <Phone className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <span className="text-xs hover:text-blue-400 group-hover:no-underline cursor-pointer">
                     +971563096262
                   </span>
                 </a>
@@ -275,10 +243,19 @@ const Footer = () => {
         </div>
         {/* Bottom Bar - Smaller */}
         <div className="border-t border-gray-600 mt-4 sm:mt-6 pt-3 sm:pt-4">
-          <div className="text-center text-xs text-gray-300">
+          <div className="text-center text-xs text-gray-300 space-y-2">
             <p>&copy; {currentYear} Oasis Marine. All rights reserved.</p>
+            <p>
+              <a
+                href="/privacy-policy"
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Privacy Policy
+              </a>
+            </p>
           </div>
         </div>
+
       </div>
     </footer>
   );

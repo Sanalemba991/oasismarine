@@ -1,191 +1,200 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { useEffect, useState } from 'react';
-import { Variants } from 'framer-motion';
+import Image from 'next/image';
+import { useRef, useEffect, useState } from 'react';
 
-const latestProducts = [
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  image: string;
+}
+
+const featuredProducts: Product[] = [
   {
     id: 1,
-    name: "BLIND FLANGES",
-    model: "FLANGES",
-    image: "/Blind.png",
-    category: "Wi-Fi Camera",
+    name: '45 DEGREE ELBOW',
+    category: 'BUTTWELD FITTINGS',
+    image: '/products/product1.png'
   },
+  {
+    id: 2,
+    name: 'RUBBER MAT',
+    category: 'RUBBER',
+    image: '/products/product2.png'
+  },
+  {
+    id: 3,
+    name: 'UNION TYPE COUPLINGS',
+    category: 'EXPANSION JOINTS',
+    image: '/products/product3.png'
+  },
+  {
+    id: 4,
+    name: '45 DEGREE ELBOW',
+    category: 'GROOVED FITTINGS',
+    image: '/products/product4.png'
+  },
+  {
+    id: 5,
+    name: 'FIRE AXE',
+    category: 'FIRE SAFETY',
+    image: '/products/product5.png'
+   }, {
+    id: 6,
+    name: 'DISPOSABLE COVERALL',
+    category: 'SAFETY EQUIPMENTS',
+    image: '/products/product6.png'
+  }
 ];
 
-// Animation variants (unchanged)
-const containerVariants : Variants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
-    }
-  }
-};
+const Products = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
+  const [showLeftButton, setShowLeftButton] = useState(false);
+  const [showRightButton, setShowRightButton] = useState(true);
+  const [showControls, setShowControls] = useState(false);
+  const scrollSpeed = 1;
 
-const titleVariants : Variants = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: {
-      duration: 0.9,
-      ease: [0.23, 1, 0.32, 1],
-      delay: 0.1
-    }
-  }
-};
+  useEffect(() => {
+    let animationFrameId: number;
+    
+    const scroll = () => {
+      const container = scrollContainerRef.current;
+      if (container && isAutoScrolling) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        let newPosition = currentScrollPosition + scrollSpeed;
 
-const lineVariants : Variants = {
-  hidden: { width: 0 },
-  visible: { 
-    width: "6rem",
-    transition: {
-      duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94],
-      delay: 0.3
-    }
-  }
-};
+        if (newPosition >= maxScroll / 3) {
+          newPosition = 0;
+        }
 
-const cardVariants : Variants = {
-  hidden: { opacity: 0, y: 60, rotateX: 15, scale: 0.9 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    rotateX: 0, 
-    scale: 1,
-    transition: {
-      duration: 1,
-      ease: [0.175, 0.885, 0.32, 1.275],
-      delay: 0.5
-    }
-  },
-  float: {
-    y: [0, -3, 0],
-    transition: {
-      duration: 3,
-      ease: "easeInOut",
-      repeat: Infinity
-    }
-  }
-};
+        container.scrollTo({
+          left: newPosition,
+          behavior: 'auto'
+        });
+        setCurrentScrollPosition(newPosition);
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
 
-const imageVariants : Variants = {
-  hidden: { opacity: 0, y: 25, scale: 0.8 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: {
-      duration: 0.8,
-      ease: [0.34, 1.56, 0.64, 1],
-      delay: 0.7
+    if (isAutoScrolling) {
+      animationFrameId = requestAnimationFrame(scroll);
     }
-  }
-};
 
-const nameVariants : Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94],
-      delay: 0.9
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isAutoScrolling, currentScrollPosition]);
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      setShowLeftButton(container.scrollLeft > 0);
+      setShowRightButton(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+      );
     }
-  }
-};
+  };
 
-const modelVariants : Variants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94],
-      delay: 1
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
     }
-  }
-};
+  }, []);
 
-export default function ProductsSection() {
-  const [ref, inView] = useInView({
-    threshold: 0.2,
-    triggerOnce: true
-  });
+  const scroll = (direction: 'left' | 'right') => {
+    setIsAutoScrolling(false);
+    if (scrollContainerRef.current) {
+      const scrollAmount = 280;
+      const newScrollLeft = scrollContainerRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
+      scrollContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+      setCurrentScrollPosition(newScrollLeft);
+    }
+  };
+
+  const extendedProducts = [...featuredProducts, ...featuredProducts, ...featuredProducts];
 
   return (
-    <motion.section 
-      ref={ref}
-      variants={containerVariants}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-      className="py-20 bg-white products-section"
-    >
-      <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
-        {/* Section Header - Made smaller */}
-        <div className="text-center mb-16">
-          <motion.h2 
-            variants={titleVariants}
-            className="text-2xl md:text-4xl font-bold text-gray-800 mb-6" // Reduced from text-xl md:text-5xl
-          >
-            Explore Our Latest <span className='text-[#1e3a8a]'>Products</span>
-          </motion.h2>
-          <motion.div 
-            variants={lineVariants}
-            className="w-24 h-1 bg-blue-900 mx-auto"
-          />
-        </div>
-
-        {/* Single Product Card - Enlarged */}
-        <div className="flex justify-center">
-          <div className="max-w-lg w-full">
-            {latestProducts.map((product) => (
-              <motion.div 
-                key={product.id}
-                variants={cardVariants}
-                animate={inView ? ["visible", "float"] : ""}
-                className="rounded-3xl  text-center "
-              >
-                {/* Product Image - Made bigger */}
-                <div className="mb-10 flex justify-center">
-                  <motion.img 
-                    src={product.image} 
-                    alt={product.name}
-                    variants={imageVariants}
-                    className="w-80 h-auto object-contain"
-                  />
-                </div>
-
-                {/* Product Info */}
-                <div className="space-y-3">
-                  <motion.h3 
-                    variants={nameVariants}
-                    className="text-2xl font-bold text-gray-800"
-                  >
-                    {product.name}
-                  </motion.h3>
-                  <motion.p 
-                    variants={modelVariants}
-                    className="text-gray-600 text-base"
-                  >
-                    {product.model}
-                  </motion.p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+    <section className="max-w-[1400px] mx-auto py-12">
+      <div className="text-center mb-10">
+        <h3 className="text-4xl font-bold mb-2">
+          Explore Our Featured
+        </h3>
+        <h2 className="text-3xl text-[#1e3a8a] text-semibold">
+          Products
+        </h2>
       </div>
-    </motion.section>
+
+      <div 
+        className="relative group"
+        onMouseEnter={() => {
+          setIsAutoScrolling(false);
+          setShowControls(true);
+        }}
+        onMouseLeave={() => {
+          setIsAutoScrolling(true);
+          setShowControls(false);
+        }}
+      >
+        <button
+          onClick={() => scroll('left')}
+          className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 
+            p-4 rounded-full shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 
+            w-14 h-14 flex items-center justify-center`}
+        >
+          <span className="text-blue-600 text-2xl">←</span>
+        </button>
+
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-4 overflow-x-auto scroll-smooth hide-scrollbar snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
+          }}
+        >
+          {extendedProducts.map((product, index) => (
+            <div
+              key={`${product.id}-${index}`}
+              className="min-w-[280px] flex flex-col items-center transform transition-all duration-300 hover:-translate-y-1 snap-center"
+            >
+              <div className="relative w-48 h-48 transition-transform duration-300 hover:scale-110">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-4">{product.name}</h3>
+              <p className="text-gray-600">{product.category}</p>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => scroll('right')}
+          className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 
+            p-4 rounded-full shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 
+            w-12 h-12 flex items-center justify-center
+            ${!showRightButton && 'hidden'}`}
+        >
+          <span className="text-blue-600 text-xl">→</span>
+        </button>
+      </div>
+    </section>
   );
-}
+};
+
+export default Products;

@@ -41,6 +41,8 @@ import {
   FaWeight,
   FaRulerCombined,
 } from "react-icons/fa";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Product {
   id: string;
@@ -54,7 +56,6 @@ interface Product {
   specifications?: any;
   reviewsData?: any;
   catalogFile?: string;
-  // Added packaging information
   packaging?: {
     dimensions?: {
       length?: number;
@@ -110,6 +111,17 @@ export default function ProductDetail({
   const [isHovered, setIsHovered] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const shareLinks = useMemo(() => {
+    const url = encodeURIComponent(
+      typeof window !== "undefined" ? window.location.href : ""
+    );
+    const text = encodeURIComponent(product?.name || "");
+    return {
+      whatsapp: `https://wa.me/?text=${text}%20${url}`,
+      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    };
+  }, [product]);
 
   // Initialize params
   useEffect(() => {
@@ -159,8 +171,8 @@ export default function ProductDetail({
 
   const allImages = product
     ? ([product.cardImage, ...(product.detailImages || [])].filter(
-        Boolean
-      ) as string[])
+      Boolean
+    ) as string[])
     : [];
 
   const prevImage = () => {
@@ -172,46 +184,285 @@ export default function ProductDetail({
     setSelectedImageIndex((i) => (i + 1) % allImages.length);
     setSelectedImage(allImages[selectedImageIndex]);
   };
+  // ... existing imports ...
 
-  const shareLinks = useMemo(() => {
-    const url = encodeURIComponent(
-      typeof window !== "undefined" ? window.location.href : ""
-    );
-    const text = encodeURIComponent(product?.name || "");
-    return {
-      whatsapp: `https://wa.me/?text=${text}%20${url}`,
-      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-    };
-  }, [product]);
+  const downloadProductInfo = async () => {
+    if (!product) return;
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    setNotificationMessage(
-      isFavorite ? "Removed from favorites" : "Added to favorites"
-    );
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
-  };
+    setIsDownloading(true);
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator
-        .share({
-          title: product?.name || "Product Details",
-          text: product?.shortDescription || "Check out this product!",
-          url: window.location.href,
-        })
-        .catch((error) => console.log("Error sharing", error));
-    } else {
-      // Copy link to clipboard as fallback
-      navigator.clipboard.writeText(window.location.href);
-      setNotificationMessage("Link copied to clipboard");
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      let currentY = margin;
+
+      // Helper functions
+      const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 12) => {
+        pdf.setFontSize(fontSize);
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(lines, x, y);
+        return y + (lines.length * (fontSize * 0.5));
+      };
+
+      const addHeading = (text: string, y: number) => {
+        pdf.setFontSize(16);
+        pdf.setTextColor(33, 64, 175);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(text, margin, y);
+        currentY = y + 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(60, 60, 60);
+        pdf.setFontSize(12);
+      };
+
+      // Improved image loading function
+      const loadImageSafely = async (imageUrl: string): Promise<string | null> => {
+        try {
+          // Check if it's a relative URL and make it absolute
+          const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
+
+          const response = await fetch(fullUrl, {
+            mode: 'cors',
+            headers: {
+              'Accept': 'image/*',
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+          }
+
+          const blob = await response.blob();
+
+          // Validate image type
+          if (!blob.type.startsWith('image/')) {
+            throw new Error('Invalid image type');
+          }
+
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.warn(`Failed to load image ${imageUrl}:`, error);
+          return null;
+        }
+      };
+
+      // Add header with company logo
+      try {
+        const logoBase64 = await loadImageSafely('/logo1.png');
+        if (logoBase64) {
+          pdf.addImage(logoBase64, 'PNG', margin, currentY, 20, 20);
+        }
+        currentY += 30;
+      } catch (error) {
+        console.warn('Logo loading failed:', error);
+        currentY += 10; // Add some space even if logo fails
+      }
+
+      // Add product title section
+      pdf.setFillColor(245, 247, 250);
+      pdf.rect(margin, currentY, pageWidth - (margin * 2), 30, 'F');
+
+      // Product name
+      pdf.setFontSize(20);
+      pdf.setTextColor(33, 64, 175);
+      pdf.setFont('helvetica', 'bold');
+      currentY = addWrappedText(product.name, margin + 5, currentY + 8, pageWidth - (margin * 2) - 10, 20);
+
+      // Short description
+      if (product.shortDescription) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(80, 80, 80);
+        pdf.setFont('helvetica', 'normal');
+        currentY = addWrappedText(product.shortDescription, margin + 5, currentY + 5, pageWidth - (margin * 2) - 10, 12);
+      }
+
+      currentY += 15;
+
+      // Add product image with better error handling
+      if (product.cardImage || (product.detailImages && product.detailImages[0])) {
+        const imageUrl = product.cardImage || product.detailImages![0];
+
+        try {
+          const imageBase64 = await loadImageSafely(imageUrl);
+          if (imageBase64) {
+            // Determine image format
+            const imageFormat = imageUrl.toLowerCase().includes('.png') ? 'PNG' : 'JPEG';
+
+            // Add image with proper dimensions
+            const imageWidth = Math.min(pageWidth - (margin * 2), 120);
+            const imageHeight = 80;
+
+            pdf.addImage(imageBase64, imageFormat, margin, currentY, imageWidth, imageHeight);
+            currentY += imageHeight + 15;
+          } else {
+            // Add placeholder text if image fails
+            pdf.setFontSize(10);
+            pdf.setTextColor(150, 150, 150);
+            pdf.text('[Image could not be loaded]', margin, currentY);
+            currentY += 10;
+          }
+        } catch (error) {
+          console.warn('Product image loading failed:', error);
+          // Continue without image
+        }
+      }
+
+      // Add long description
+      if (product.longDescription) {
+        addHeading('Description', currentY);
+        currentY = addWrappedText(product.longDescription, margin, currentY + 5, pageWidth - (margin * 2));
+        currentY += 10;
+      }
+
+      // Add key features
+      if (product.shortFeatures && product.shortFeatures.length > 0) {
+        addHeading('Key Features', currentY);
+        product.shortFeatures.forEach(feature => {
+          // Add bullet point
+          pdf.setFillColor(33, 64, 175);
+          pdf.circle(margin + 3, currentY + 3, 1, 'F');
+          currentY = addWrappedText(feature, margin + 8, currentY + 4, pageWidth - (margin * 2) - 8);
+          currentY += 4;
+        });
+        currentY += 10;
+      }
+
+      // Add specifications table
+      if (product.specifications && Object.keys(product.specifications).length > 0) {
+        addHeading('Technical Specifications', currentY);
+
+        const tableData = Object.entries(product.specifications)
+          .filter(([_, value]) => value !== null && value !== undefined && value !== '');
+
+        if (tableData.length > 0) {
+          // Table styling
+          pdf.setFillColor(245, 247, 250);
+          pdf.setDrawColor(220, 220, 220);
+          pdf.setLineWidth(0.1);
+
+          // Table headers
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(33, 64, 175);
+          pdf.setTextColor(255, 255, 255);
+          pdf.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
+          pdf.text('Specification', margin + 3, currentY + 6);
+          pdf.text('Value', margin + (pageWidth - (margin * 2)) / 2 + 3, currentY + 6);
+          currentY += 8;
+
+          // Table rows
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(60, 60, 60);
+
+          tableData.forEach((row, index) => {
+            if (index % 2 === 0) {
+              pdf.setFillColor(250, 250, 250);
+              pdf.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
+            }
+
+            // Truncate long values to prevent overflow
+            const key = row[0].length > 25 ? row[0].substring(0, 22) + '...' : row[0];
+            const value = String(row[1]).length > 30 ? String(row[1]).substring(0, 27) + '...' : String(row[1]);
+
+            pdf.text(key, margin + 3, currentY + 6);
+            pdf.text(value, margin + (pageWidth - (margin * 2)) / 2 + 3, currentY + 6);
+            currentY += 8;
+          });
+          currentY += 10;
+        }
+      }
+
+      // Add packaging information
+      if (product.packaging) {
+        addHeading('Packaging Information', currentY);
+
+        const packagingInfo = [];
+
+        if (product.packaging.dimensions) {
+          const dims = product.packaging.dimensions;
+          packagingInfo.push(`Dimensions: ${dims.length || 'N/A'} × ${dims.width || 'N/A'} × ${dims.height || 'N/A'} ${dims.unit || ''}`);
+        }
+
+        if (product.packaging.weight) {
+          const weight = product.packaging.weight;
+          packagingInfo.push(`Net Weight: ${weight.net || 'N/A'} ${weight.unit || ''}`);
+          packagingInfo.push(`Gross Weight: ${weight.gross || 'N/A'} ${weight.unit || ''}`);
+        }
+
+        if (product.packaging.material) {
+          packagingInfo.push(`Material: ${product.packaging.material}`);
+        }
+
+        if (product.packaging.type) {
+          packagingInfo.push(`Package Type: ${product.packaging.type}`);
+        }
+
+        if (product.packaging.quantity) {
+          packagingInfo.push(`Quantity per Package: ${product.packaging.quantity} units`);
+        }
+
+        packagingInfo.forEach(info => {
+          currentY = addWrappedText(`• ${info}`, margin, currentY + 4, pageWidth - (margin * 2));
+          currentY += 2;
+        });
+
+        if (product.packaging.notes) {
+          currentY += 5;
+          pdf.setFillColor(255, 248, 220);
+          const noteHeight = 15;
+          pdf.rect(margin, currentY, pageWidth - (margin * 2), noteHeight, 'F');
+          pdf.setFontSize(10);
+          pdf.setTextColor(150, 100, 0);
+          currentY = addWrappedText(`Note: ${product.packaging.notes}`, margin + 3, currentY + 5, pageWidth - (margin * 2) - 6, 10);
+          currentY += 10;
+        }
+      }
+
+      // Add footer with generation info
+      const footerY = pageHeight - 15;
+      pdf.setFontSize(9);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`Generated on ${new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`, margin, footerY);
+
+      pdf.text('© ' + new Date().getFullYear() + ' All rights reserved', pageWidth - margin - 50, footerY);
+
+      // Generate filename
+      const sanitizedName = product.name
+        .replace(/[^a-z0-9\s]/gi, '')
+        .replace(/\s+/g, '_')
+        .toLowerCase()
+        .substring(0, 50);
+
+      const fileName = `${sanitizedName}_product_info.pdf`;
+
+      // Save the PDF
+      pdf.save(fileName);
+
+      setNotificationMessage('Product information PDF downloaded successfully!');
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
+
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      setNotificationMessage('Failed to generate PDF. Please try again.');
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    } finally {
+      setIsDownloading(false);
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -298,8 +549,8 @@ export default function ProductDetail({
     day: "numeric",
   });
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+ return (
+    <div className="min-h-screen bg-white">
       {/* Notification Toast */}
       <div
         className={`fixed top-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-xl shadow-lg z-50 transform transition-all duration-300 ${
@@ -312,97 +563,94 @@ export default function ProductDetail({
       </div>
 
       {/* Banner Section */}
-      <div className="relative py-8 md:py-12 lg:py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-6 py-16 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left side - Content */}
-            <motion.div
-              className="text-white space-y-6"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div>
-                <motion.h1
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                >
-                  {product.name}
-                </motion.h1>
-
-                {product.shortDescription && (
-                  <motion.p
-                    className="text-xl md:text-2xl text-blue-100 leading-relaxed mb-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                  >
-                    {product.shortDescription}
-                  </motion.p>
-                )}
-
-                <motion.div
-                  className="flex flex-wrap items-center gap-6 text-blue-100"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                ></motion.div>
-              </div>
-            </motion.div>
-
-            {/* Right side - Hero Image */}
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className="relative aspect-square max-w-lg mx-auto">
-                <div className="absolute inset-0"></div>
-
-                {selectedImage ? (
-                  <div className="relative w-full h-full">
-                    {/* Main Product Image */}
-                    <Image
-                      src={selectedImage}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-8 rounded-3xl"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      priority
-                    />
-
-                    {/* Centered Watermark */}
-                    <Image
-                      src="/logo.png"
-                      alt="Watermark"
-                      width={150}
-                      height={150}
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none select-none"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-3xl">
-                    <span className="text-8xl text-gray-400">🔧</span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-          <div className="absolute top-20 right-20 w-72 h-72 border border-white/20 rounded-full"></div>
-          <div className="absolute top-40 right-40 w-48 h-48 border border-white/10 rounded-full"></div>
-        </div>
-      </div>
+      <div className="relative py-4 md:py-6 lg:py-8 bg-white overflow-hidden">         
+  <div className="absolute inset-0 bg-white"></div>         
+  <div className="container mx-auto px-6 py-8 relative z-10">           
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">             
+      {/* Left side - Content */}             
+      <motion.div               
+        className="text-white space-y-4"               
+        initial={{ opacity: 0, x: -50 }}               
+        animate={{ opacity: 1, x: 0 }}               
+        transition={{ duration: 0.8 }}             
+      >               
+        <div>                 
+          <motion.h1                   
+            className="text-3xl text-[#1e3a8a] md:text-4xl lg:text-5xl font-bold mb-3 leading-tight"                   
+            initial={{ opacity: 0, y: 30 }}                   
+            animate={{ opacity: 1, y: 0 }}                   
+            transition={{ duration: 0.8, delay: 0.3 }}                 
+          >                   
+            {product.name}                 
+          </motion.h1>                  
+          
+          {product.shortDescription && (                   
+            <motion.p                     
+              className="text-lg md:text-xl text-black leading-relaxed mb-4"                     
+              initial={{ opacity: 0, y: 20 }}                     
+              animate={{ opacity: 1, y: 0 }}                     
+              transition={{ duration: 0.6, delay: 0.4 }}                   
+            >                     
+              {product.shortDescription}                   
+            </motion.p>                 
+          )}                  
+          
+          <motion.div                   
+            className="flex flex-wrap items-center gap-4 text-blue-100"                   
+            initial={{ opacity: 0, y: 20 }}                   
+            animate={{ opacity: 1, y: 0 }}                   
+            transition={{ duration: 0.6, delay: 0.5 }}                 
+          >
+          </motion.div>               
+        </div>             
+      </motion.div>              
+      
+      {/* Right side - Hero Image */}             
+      <motion.div               
+        className="relative order-first lg:order-last"               
+        initial={{ opacity: 0, x: 50 }}               
+        animate={{ opacity: 1, x: 0 }}               
+        transition={{ duration: 0.8, delay: 0.2 }}             
+      >               
+        <div className="relative aspect-square max-w-xs sm:max-w-sm md:max-w-md mx-auto">                 
+          <div className="absolute inset-0"></div>                  
+          
+          {selectedImage ? (                   
+            <div className="relative w-full h-full">                     
+              {/* Main Product Image */}                     
+              <Image                       
+                src={selectedImage}                       
+                alt={product.name}                       
+                fill                       
+                className="object-contain p-4 sm:p-6 rounded-xl sm:rounded-2xl"                       
+                sizes="(max-width: 640px) 90vw, (max-width: 768px) 70vw, 50vw"                       
+                priority                     
+              />                      
+              
+              {/* Centered Watermark */}                     
+              <Image                       
+                src="/logo1.png"                       
+                alt="Watermark"                       
+                width={80}
+                height={80}                       
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 sm:opacity-30 pointer-events-none select-none sm:w-[120px] sm:h-[120px]"                     
+              />                   
+            </div>                 
+          ) : (                   
+            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-xl sm:rounded-2xl">                     
+              <span className="text-4xl sm:text-5xl md:text-6xl text-gray-400">🔧</span>                   
+            </div>                 
+          )}               
+        </div>             
+      </motion.div>           
+    </div>         
+  </div>          
+  
+  {/* Decorative Elements */}                
+</div>
 
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b-[0.5px] border-gray-200">
         <div className="container mx-auto px-6 py-4">
           <nav className="flex items-center gap-2 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-700 transition-colors">
@@ -461,7 +709,7 @@ export default function ProductDetail({
 
                 {/* Centered Watermark */}
                 <Image
-                  src="/logo.png"
+                  src="/logo1.png"
                   alt="Watermark"
                   width={150}
                   height={150}
@@ -571,6 +819,69 @@ export default function ProductDetail({
                 ))}
               </div>
             )}
+
+            {/* Social Share Section */}
+            <motion.div
+              className="flex items-center gap-3 pt-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <span className="text-gray-800 mr-2 font-medium">Share:</span>
+              <motion.a
+                href={shareLinks.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-green-500 hover:bg-green-500 hover:border-green-400 hover:text-white transition-all duration-300 shadow-lg shadow-green-500/20"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaWhatsapp size={16} />
+              </motion.a>
+              <motion.a
+                href={shareLinks.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:border-blue-400 hover:text-white transition-all duration-300 shadow-lg shadow-blue-500/20"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaTwitter size={16} />
+              </motion.a>
+              <motion.a
+                href={shareLinks.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:border-blue-500 hover:text-white transition-all duration-300 shadow-lg shadow-blue-600/20"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaFacebookF size={16} />
+              </motion.a>
+              <motion.button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(window.location.href);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-purple-500 hover:bg-purple-500 hover:border-purple-400 hover:text-white transition-all duration-300 shadow-lg shadow-purple-500/20 relative"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaLink size={14} />
+                {copied && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl border border-gray-700"
+                  >
+                    Copied!
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </motion.div>
+                )}
+              </motion.button>
+            </motion.div>
           </div>
 
           {/* Right: Product Information */}
@@ -621,7 +932,101 @@ export default function ProductDetail({
               </motion.div>
             )}
 
-            {/* Download Section */}
+            {/* Packaging Information Section */}
+            {product.packaging && (
+              <motion.div
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <CubeIcon className="w-6 h-6 mr-2 text-blue-600" />
+                  Packaging Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {product.packaging.dimensions && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaRulerCombined className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Dimensions
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.dimensions.length || "N/A"} ×{" "}
+                        {product.packaging.dimensions.width || "N/A"} ×{" "}
+                        {product.packaging.dimensions.height || "N/A"}{" "}
+                        {product.packaging.dimensions.unit || ""}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.weight && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaWeight className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">Weight</h4>
+                      </div>
+                      <p className="text-gray-600">
+                        Net: {product.packaging.weight.net || "N/A"}{" "}
+                        {product.packaging.weight.unit || ""}
+                      </p>
+                      <p className="text-gray-600">
+                        Gross: {product.packaging.weight.gross || "N/A"}{" "}
+                        {product.packaging.weight.unit || ""}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.material && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <FaBox className="text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">Material</h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.material}
+                      </p>
+                    </div>
+                  )}
+                  {product.packaging.type && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center mb-2">
+                        <TagIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Package Type
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">{product.packaging.type}</p>
+                    </div>
+                  )}
+                  {product.packaging.quantity && (
+                    <div className="bg-white rounded-xl p-4 border border-blue-200 md:col-span-2">
+                      <div className="flex items-center mb-2">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">
+                          Quantity per Package
+                        </h4>
+                      </div>
+                      <p className="text-gray-600">
+                        {product.packaging.quantity} units
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {product.packaging.notes && (
+                  <div className="mt-4 bg-blue-100 rounded-lg p-3 border-l-4 border-blue-600">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> {product.packaging.notes}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            <div className="bottom-0 left-0 w-full h-px bg-gray-300"></div>
+
+            {/* Enhanced Download Section */}
             <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 20 }}
@@ -630,6 +1035,27 @@ export default function ProductDetail({
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <div className="flex flex-col sm:flex-row gap-3">
+                {/* Enhanced Download Button */}
+                <motion.button
+                  onClick={downloadProductInfo}
+                  disabled={isDownloading}
+                  className="border border-blue-600 text-blue-600 py-1 px-3 rounded-md text-xs font-medium transition-all duration-300 flex items-center justify-center hover:bg-blue-600 hover:text-white"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isDownloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent mr-2"></div>
+                      <span>Preparing Download...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaDownload className="mr-2" />
+                      <span>Download Complete Info</span>
+                    </>
+                  )}
+                </motion.button>
+
                 {/* Contact Us Button */}
                 <motion.button
                   onClick={() => {
@@ -664,10 +1090,100 @@ export default function ProductDetail({
                   </motion.a>
                 )}
               </div>
+
+              {/* Download Info */}
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  Complete info includes: Product details, specifications,
+                  packaging info, and all images
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Enhanced Image Modal */}
+      <Transition appear show={isImageModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setIsImageModalOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="relative max-w-6xl max-h-full">
+                  <motion.div
+                    className="relative"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Image
+                      src={selectedImage || "/placeholder-product.jpg"}
+                      alt={product.name}
+                      width={1200}
+                      height={900}
+                      className="object-contain max-h-full rounded-xl shadow-2xl"
+                    />
+                    <motion.button
+                      onClick={() => setIsImageModalOpen(false)}
+                      className="absolute top-4 right-4 text-white bg-black/20 backdrop-blur-sm border border-white/20 rounded-full p-3 hover:bg-black/40 transition-all duration-200"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <FaTimes size={18} />
+                    </motion.button>
+
+                    {allImages.length > 1 && (
+                      <>
+                        <motion.button
+                          onClick={prevImage}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 backdrop-blur-sm border border-white/20 rounded-full p-3 hover:bg-black/40 transition-all duration-200"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FaChevronLeft size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={nextImage}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 backdrop-blur-sm border border-white/20 rounded-full p-3 hover:bg-black/40 transition-all duration-200"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FaChevronRight size={18} />
+                        </motion.button>
+                      </>
+                    )}
+                  </motion.div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
 
       {/* Contact Modal */}
       <ContactModal

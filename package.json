@@ -26,6 +26,7 @@
     "cloudinary": "^2.7.0",
     "framer-motion": "^12.23.12",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.2",
     "lucide-react": "^0.542.0",
     "multer": "^2.0.2",
     "next": "^15.5.2",

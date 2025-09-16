@@ -7,7 +7,7 @@ import Image from "next/image";
 import Ram from "./Ram";
 import Sam from "./Sam";
 import RAms from "../app/assets/branch/oasisstar-275x300.jpg";
-import Banner from  "../app/assets/branch/History.png";
+import Banner from  "../app/assets/banner/Our Branches.jpg";
 
 interface HistoryMilestone {
   year: number;
@@ -217,7 +217,7 @@ const Branch: React.FC = () => {
                     },
                   },
                 }}
-                className="text-lg sm:text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed max-w-2xl drop-shadow-md"
+                className="text-sm sm:text-base lg:text-lg text-gray-200 mb-8 leading-relaxed max-w-2xl drop-shadow-md"
               >
                 Empowering innovation, education, and digital transformation
                 across all our branches.
@@ -269,7 +269,7 @@ const Branch: React.FC = () => {
               variants={itemVariants}
             >
               <motion.div variants={fadeInUp}>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                <h2 className="text-3xl md:text-4xl sm:text-4xl  font-bold text-gray-900 leading-tight mb-6">
                   <span className="block text-2xl sm:text-3xl md:text-4xl mb-2">
                     OASIS STAR BUILDING
                   </span>
@@ -311,6 +311,7 @@ const Branch: React.FC = () => {
       </motion.section>
       <Ram />
       <Sam />
+
     </>
   );
 };
