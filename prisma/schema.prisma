@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+/// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  contacts      Contact[]
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Navigation models - Fixed naming
+model Category {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  href          String
+  isCategory    Boolean       @default(false)
+  visible       Boolean       @default(true)
+  order         Int           @default(0)
+  image         String?       // Category image URL
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  subcategories Subcategory[]
+  products      Product[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  href       String
+  categoryId String   @db.ObjectId
+  visible    Boolean  @default(true)
+  order      Int      @default(0)
+  image      String?  // Subcategory image URL
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[]
+
+  @@map("subcategories")
+}
+
+// Product model for LED products
+model Product {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  slug              String    @unique // SEO-friendly URL slug
+  shortDescription  String
+  longDescription   String?
+  cardImage         String    // Single image for product cards
+  detailImages      String[]  // Array of images for product details page
+  shortFeatures     String[]  // Array of short features
+  specifications    Json?     // Product specifications as JSON
+  reviewsData       Json?     // Reviews data as JSON
+  catalogFile       String?   // PDF catalog file URL
+  categoryId        String?   @db.ObjectId
+  subcategoryId     String?   @db.ObjectId
+  isActive          Boolean   @default(true)
+  viewCount         Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  category          Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subcategory       Subcategory? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+
+  @@map("products")
+}
+
+// Contact model for user inquiries (product inquiries)
+model Contact {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String
+  status      String   @default("new") // new, read, replied
+  priority    String   @default("medium") // low, medium, high
+  userId      String?  @db.ObjectId
+  productId   String?  @db.ObjectId
+  productName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  repliedAt   DateTime?
+  
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@map("contacts")
+}
+
+// Contact Submission model for public contact form
+model ContactSubmission {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  subject     String
+  message     String
+  status      String   @default("new") // new, read, replied
+  priority    String   @default("medium") // low, medium, high
+  source      String   @default("contact_form") // contact_form, product_inquiry
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  repliedAt   DateTime?
+  
+  @@map("contact_submissions")
+}
+
+

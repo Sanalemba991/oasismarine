@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* Hide horizontal overflow and disable horizontal scrolling */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Optional: Also prevent horizontal scrolling on all elements */
+
+
+/* Alternative approach - completely disable horizontal scrolling */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
