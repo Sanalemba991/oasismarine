@@ -11,40 +11,40 @@ export default function Banner() {
   // Array of banner images with descriptions and links
  const banners = [
   {
-    image: "/banner/Contact 1.png",
+    image: "/banner/banner.png",
     title: (
       <>
-        Contact <span style={{ color: "#1e3a8a" }}>Us</span>
+        Contact <span style={{ color: "#87C0CD" }}>Us</span>
       </>
     ),
     description:
       "Reach out for quotes, support or inquiries. Our expert team is here to help you find the right marine & industrial supplies.",
   },
   {
-    image: "/banner/About Us.png",
+    image: "/banner/banner (1).png",
     title: (
       <>
-        About <span style={{ color: "#1e3a8a" }}>Us</span>
+        About <span style={{ color: "#87C0CD" }}>Us</span>
       </>
     ),
     description:
       "Founded in 2023, we deliver high-quality marine & oilfield equipment across UAE & Middle East, driven by innovation, quality & customer service.",
   },
   {
-    image: "/banner/Products.png",
+    image: "/banner/banner (3).png",
     title: (
       <>
-        Our <span style={{ color: "#1e3a8a" }}>Products</span>
+        Our <span style={{ color: "#87C0CD" }}>Products</span>
       </>
     ),
     description:
       "Valves, fittings, flanges, rubber & gasket sheets, clamps, hoses + more — all engineered for durability & performance in demanding environments.",
   },
   {
-    image: "/banner/Branches.png",
+    image: "/banner/banner (2).png",
     title: (
       <>
-        Our <span style={{ color: "#1e3a8a" }}>Branches</span>
+        Our <span style={{ color: "#87C0CD" }}>Branches</span>
       </>
     ),
     description:
@@ -126,7 +126,7 @@ export default function Banner() {
       className="w-full relative"
     >
       {/* Banner Container - Full screen height */}
-      <div className="relative w-full h-screen min-h-[600px] overflow-hidden">
+      <div className="relative w-full h-screen mt-4 min-h-[600px] overflow-hidden">
         <AnimatePresence custom={direction} initial={false}>
           <motion.div
             key={currentImageIndex}

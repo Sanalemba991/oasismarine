@@ -8,6 +8,8 @@ import Flipbook from "../components/Flipbook";
 import QHSEPolicySection from "../components/QHSEPolicySection";
 import ProductCategoriesSection from "../components/ProductCategoriesSection";
 import Testimony from "../components/Testimony";
+import { Suspense } from "react";
+
 export default function Home() {
   return (
     <div>
@@ -20,7 +22,9 @@ export default function Home() {
       <FAQ />
       <QHSEPolicySection />
       <Testimony/>
-      <ProductCategoriesSection />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ProductCategoriesSection />
+      </Suspense>
     </div>
   );
 }

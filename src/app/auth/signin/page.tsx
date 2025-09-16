@@ -1,137 +1,133 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { FaGoogle, FaLock, FaCheckCircle } from 'react-icons/fa';
-import { MdSupport } from 'react-icons/md';
-import Image from 'next/image';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { FaShieldAlt } from 'react-icons/fa';
+import { MdSupport, MdBusiness, MdSecurity } from 'react-icons/md';
+import type { Metadata } from 'next';
+import SignInClient from "../../../components/SignInClient"
+
+export const metadata: Metadata = {
+  title: 'Sign In | Oasis Marine Trading LLC',
+  description:
+    'Access your Oasis Marine Trading LLC account by signing in securely. Manage your profile, explore services, and stay connected with our latest updates.',
+  keywords:
+    'Oasis Marine sign in, login, account access, customer portal, marine trading UAE, industrial solutions login',
+  openGraph: {
+    title: 'Sign In | Oasis Marine Trading LLC',
+    description:
+      'Access your Oasis Marine Trading LLC account by signing in securely. Manage your profile, explore services, and stay connected with our latest updates.',
+    type: 'website',
+    url: 'https://oasismarineuae.com/signin',
+  },
+  robots: {
+    index: false, // usually login/sign-in pages are not indexed
+    follow: false,
+  },
+};
 
 export default function SignInPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      const result = await signIn('google', {
-        callbackUrl: '/profile',
-        redirect: false,
-      });
-      
-      if (result?.ok) {
-        router.push('/profile');
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFFFBA]/30 via-[#FFDFBA]/50 to-[#FFB3BA]/30 flex items-center justify-center p-4">
-      {/* Background Pattern */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      {/* Subtle Professional Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#FFB3BA]/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#6D688A]/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-[#FFDFBA]/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-transparent to-transparent opacity-50"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-slate-200 via-transparent to-transparent opacity-30"></div>
       </div>
 
-      <div className="relative w-full max-w-md">
-        {/* Main Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-[#FFDFBA]/50 p-8">
-          {/* Logo/Brand Section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#6D688A] to-[#FFB3BA] rounded-2xl mb-4 shadow-lg p-2">
-              <Image
-                src="/logo.png"
-                alt="Oasis Marine Trading LLC"
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain"
-              />
+      <div className="relative w-full max-w-lg">
+        {/* Professional Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-center w-12 h-12">
+              <img src="/logo1.png" alt="Oasis Marine Logo" width={40} height={40} className="object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-[#6D688A] mb-2">Welcome Back</h1>
-            <p className="text-[#6D688A]/70">Sign in to your Oasis Marine Trading account</p>
+            <div className="text-left">
+              <h1 className="text-xl font-bold text-slate-800">Oasis Marine Trading LLC</h1>
+              <p className="text-sm text-slate-600">Professional Portal</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Authentication Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          {/* Header Section */}
+          <div className="bg-slate-800 px-8 py-6">
+            <h2 className="text-xl font-semibold text-white mb-1">Account Access</h2>
+            <p className="text-slate-300 text-sm">Sign in to your professional dashboard</p>
           </div>
 
-          {/* Google Sign In Button */}
-          <div className="space-y-6">
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center space-x-3 px-6 py-3 border-2 border-[#6D688A]/20 rounded-lg hover:border-[#FFB3BA]/50 hover:bg-[#FFDFBA]/20 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <AiOutlineLoading3Quarters className="w-5 h-5 text-[#FFB3BA] animate-spin" />
-              ) : (
-                <FaGoogle className="w-5 h-5 text-[#4285F4]" />
-              )}
-              <span className="text-[#6D688A] font-medium group-hover:text-[#FFB3BA] transition-colors">
-                {isLoading ? 'Signing in...' : 'Continue with Google'}
-              </span>
-            </button>
+          {/* Content Section */}
+          <div className="p-8">
+            {/* Client Component for Sign In Button */}
+            <SignInClient />
 
-            {/* Quick Access Info */}
-            <div className="bg-gradient-to-r from-[#FFDFBA]/30 to-[#FFB3BA]/20 rounded-lg p-4 mt-6">
-              <h3 className="text-sm font-semibold text-[#6D688A] mb-2">Quick & Secure Access</h3>
-              <ul className="space-y-1 text-sm text-[#6D688A]/80">
-                <li className="flex items-center space-x-2">
-                  <FaCheckCircle className="w-3 h-3 text-[#FFB3BA]" />
-                  <span>One-click sign in with Google</span>
+            {/* Professional Features */}
+            <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <MdBusiness className="text-slate-600" />
+                <h3 className="font-semibold text-slate-800">Professional Access</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-slate-600">
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  <span>Secure enterprise authentication</span>
                 </li>
-                <li className="flex items-center space-x-2">
-                  <FaCheckCircle className="w-3 h-3 text-[#FFB3BA]" />
-                  <span>Secure & encrypted connection</span>
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  <span>Access to trading dashboard</span>
                 </li>
-                <li className="flex items-center space-x-2">
-                  <FaCheckCircle className="w-3 h-3 text-[#FFB3BA]" />
-                  <span>Access to your dashboard</span>
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  <span>Professional account management</span>
                 </li>
               </ul>
             </div>
 
-            {/* Help Section */}
-            <div className="text-center">
-              <p className="text-xs text-[#6D688A]/60 mb-2 flex items-center justify-center space-x-1">
-                <MdSupport className="w-3 h-3" />
-                <span>Having trouble signing in?</span>
-              </p>
+            {/* Support Section */}
+            <div className="mt-6 text-center">
+              <div className="flex items-center justify-center gap-2 text-slate-500 mb-2">
+                <MdSupport className="text-sm" />
+                <span className="text-xs">Need assistance?</span>
+              </div>
               <Link
-                href="/support"
-                className="text-[#FFB3BA] hover:text-[#6D688A] text-sm font-medium transition-colors"
+                href="/contact"
+                className="text-slate-600 hover:text-slate-800 text-sm font-medium transition-colors"
               >
-                Contact Support
+                Contact Support Team
               </Link>
             </div>
 
-            {/* Sign Up Link */}
-            <div className="text-center pt-4 border-t border-[#FFDFBA]/50">
-              <p className="text-[#6D688A]/70">
-                Don't have an account?{' '}
+            {/* Account Registration */}
+            <div className="mt-8 pt-6 border-t border-slate-200 text-center">
+              <p className="text-slate-600 text-sm">
+                New to the platform?{' '}
                 <Link
                   href="/auth/signup"
-                  className="text-[#FFB3BA] hover:text-[#6D688A] font-medium transition-colors"
+                  className="text-slate-800 hover:text-slate-900 font-medium transition-colors"
                 >
-                  Sign up for free
+                  Request Account Access
                 </Link>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Security Badge */}
-        <div className="text-center mt-6">
-          <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-2 border border-[#FFDFBA]/50">
-            <FaLock className="w-4 h-4 text-[#6D688A]" />
-            <span className="text-xs text-[#6D688A]/70 font-medium">
-              Secured by Google OAuth
-            </span>
+        {/* Security Information */}
+        <div className="mt-6 flex items-center justify-center">
+          <div className="inline-flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <FaShieldAlt className="text-emerald-600 text-sm" />
+              <span className="text-xs font-medium text-slate-700">Enterprise Security</span>
+            </div>
+            <div className="w-px h-4 bg-slate-300"></div>
+            <div className="flex items-center gap-2">
+              <MdSecurity className="text-slate-600 text-sm" />
+              <span className="text-xs text-slate-600">OAuth 2.0</span>
+            </div>
           </div>
         </div>
+
+        {/* Footer Information */}
+        
       </div>
     </div>
   );

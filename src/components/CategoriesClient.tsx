@@ -1,4 +1,3 @@
-// app/categories/CategoriesClient.tsx (Client Component)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -131,6 +130,17 @@ const filterVariants = {
     transition: {
       duration: 0.5,
       ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+};
+
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
     },
   },
 };
@@ -288,26 +298,29 @@ export default function CategoriesClient() {
 
   if (loading) {
     return (
-      <div className=" bg-gradient-to-br from-slate-50 via-gray-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-slate-200 border-t-blue-600 mx-auto shadow-lg"></div>
-            <div className="absolute inset-0 rounded-full h-20 w-20 border-4 border-transparent border-t-blue-400 animate-spin mx-auto opacity-60"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-white flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="relative mb-8">
+            <div className="animate-spin rounded-full h-24 w-24 border-4 border-slate-200 border-t-blue-600 mx-auto shadow-lg"></div>
+            <div className="absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-blue-400 animate-spin mx-auto opacity-60"></div>
           </div>
-          <div className="mt-8 space-y-3">
-            <h2 className="text-xl font-semibold text-slate-800">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-slate-800">
               Loading Categories
             </h2>
+            <p className="text-slate-600">
+              Please wait while we fetch the categories...
+            </p>
           </div>
-          <div className="mt-6 flex justify-center space-x-2">
-            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce shadow-sm"></div>
+          <div className="mt-8 flex justify-center space-x-3">
+            <div className="h-3 w-3 bg-blue-600 rounded-full animate-bounce shadow-sm"></div>
             <div
-              className="h-2 w-2 bg-blue-600 rounded-full animate-bounce shadow-sm"
-              style={{ animationDelay: "0.1s" }}
+              className="h-3 w-3 bg-blue-600 rounded-full animate-bounce shadow-sm"
+              style={{ animationDelay: "0.2s" }}
             ></div>
             <div
-              className="h-2 w-2 bg-blue-600 rounded-full animate-bounce shadow-sm"
-              style={{ animationDelay: "0.2s" }}
+              className="h-3 w-3 bg-blue-600 rounded-full animate-bounce shadow-sm"
+              style={{ animationDelay: "0.4s" }}
             ></div>
           </div>
         </div>
@@ -325,9 +338,14 @@ export default function CategoriesClient() {
   });
 
   return (
-    <div className="py-6 mt-8 bg-gradient-to-br from-gray-50 to-white">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
+      className="min-h-screen py-6 bg-gradient-to-br from-gray-50 to-white"
+    >
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Header Section */}
         <div id="header-section">
           <motion.div
@@ -605,7 +623,7 @@ export default function CategoriesClient() {
             )}
           </AnimatePresence>
         </div>
-        
+
         {/* Brands Section - Moved outside of products section */}
         <div id="brands-section" className="mt-20">
           <motion.section
@@ -615,13 +633,17 @@ export default function CategoriesClient() {
             variants={sectionVariants}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <motion.div 
+              <motion.div
                 className="text-center mb-12"
                 variants={headerVariants}
               >
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Trusted <span className="text-[#1e3a8a]">Brands</span></h2>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                  Our Trusted{" "}
+                  <span className="text-[#1e3a8a]">Brands</span>
+                </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  We partner with leading manufacturers to bring you the highest quality industrial products
+                  We partner with leading manufacturers to bring you the highest
+                  quality industrial products
                 </p>
               </motion.div>
 
@@ -639,8 +661,8 @@ export default function CategoriesClient() {
                       transition: {
                         type: "spring",
                         stiffness: 300,
-                        damping: 10
-                      }
+                        damping: 10,
+                      },
                     }}
                   >
                     <Image
@@ -662,6 +684,6 @@ export default function CategoriesClient() {
           </motion.section>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

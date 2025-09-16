@@ -231,7 +231,7 @@ const Contact: React.FC = () => {
                 className="text-4xl sm:text-5xl lg:text-6xl font-light mb-8 leading-tight"
               >
                 Contact Oasis{" "}
-                <span className="text-[#3f23cc] drop-shadow-lg">
+                <span className="text-[#87C0CD] drop-shadow-lg">
                   Marine UAE
                 </span>
               </motion.h1>

@@ -226,7 +226,7 @@ const Team = () => {
                 }}
                 className="text-4xl sm:text-5xl lg:text-6xl font-light mb-6 leading-tight"
               >
-                About <span className="text-blue-900 drop-shadow-lg">Us</span>
+                About <span className="text-[#87C0CD] drop-shadow-lg">Us</span>
               </motion.h1>
 
               <motion.p

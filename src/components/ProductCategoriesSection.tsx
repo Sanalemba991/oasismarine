@@ -8,30 +8,27 @@ export const categories = [
   {
     title: 'Valves',
     items: [
-      'BRONZE GATE VALVE FLANGED',
-      'GLOBE VALVE',
-      'FLANGED BUTTERFLY VALVE',
-      'CHECK VALVE',
-      'SS FLANGED VALVE',
-      'BUTTERFLY VALVE',
+      'Globe valve',
+      'Flanged Butterfly Valve',
+      'Check Valve',
+      'SS Flanged Valve',
+      'Butterfly Valve',
     ],
   },
   {
     title: 'Flanges',
     items: [
       'Blind Flanges',
-      'Flat Faced Slip On Flanges',
-      'Raised Face Weld Neck Flanges',
-      'Raised Faced Slip On Flanges',
+      'Lap Joint flange'
     ],
   },
   {
-    title: 'Fittings',
+    title: 'Grooved-Fittings',
     items: ['Concentric Reducers', '45 Degree elbow', 'Cross'],
   },
   {
     title: 'Expansion Joints',
-    items: ['Rubber Expansion Joints', 'METTALIC EXPANSION JOINT'],
+    items: ['Rubber Expansion Joint', 'Mettalic Expansion Joint'],
   },
 ];
 

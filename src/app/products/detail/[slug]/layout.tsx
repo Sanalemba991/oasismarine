@@ -49,8 +49,8 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Product Not Found | Oasis Marine',
-      description: 'The requested product could not be found.',
+      title: 'Product Details | Oasis Marine',
+      description: 'The requested product details.',
       robots: { index: false, follow: true }
     };
   }

@@ -315,7 +315,7 @@ export default function ClientCategoryPage({
                 className="text-4xl sm:text-5xl lg:text-6xl font-light mb-8 leading-tight"
               >
                 Discover{" "}
-                <span className="text-blue-900 drop-shadow-lg">
+                <span className="text-[#87C0CD] drop-shadow-lg">
                   {pageInfo.name}
                 </span>
               </motion.h1>

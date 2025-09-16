@@ -202,7 +202,7 @@ const Branch: React.FC = () => {
                 }}
                 className="text-4xl sm:text-5xl lg:text-6xl font-light mb-8 leading-tight"
               >
-                Our <span className="text-blue-900 drop-shadow-lg">Branch</span>
+                Our <span className="text-[#87C0CD] drop-shadow-lg">Branch</span>
               </motion.h1>
 
               <motion.p
