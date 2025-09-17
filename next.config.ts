@@ -7,11 +7,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  logging: {
-    fetches: {
-      fullUrl: true
-    }
-  },
   images: {
     remotePatterns: [
       {

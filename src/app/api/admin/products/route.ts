@@ -29,7 +29,13 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ products });
+    const response = NextResponse.json({ products });
+    
+    // Cache for 2 minutes in development, 10 minutes in production
+    const maxAge = process.env.NODE_ENV === 'production' ? 600 : 120;
+    response.headers.set('Cache-Control', `public, max-age=${maxAge}, s-maxage=${maxAge}`);
+    
+    return response;
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -73,10 +79,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
     // @ts-ignore - Temporary fix for Prisma client type issue
     const product = await prisma.product.create({
       data: {
         name,
+        slug,
         shortDescription,
         longDescription,
         cardImage,

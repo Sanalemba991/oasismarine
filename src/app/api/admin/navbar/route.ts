@@ -21,7 +21,13 @@ export async function GET() {
       orderBy: { order: 'asc' }
     });
 
-    return NextResponse.json({ categories });
+    const response = NextResponse.json({ categories });
+    
+    // Cache for 5 minutes in development, 1 hour in production
+    const maxAge = process.env.NODE_ENV === 'production' ? 3600 : 300;
+    response.headers.set('Cache-Control', `public, max-age=${maxAge}, s-maxage=${maxAge}`);
+    
+    return response;
   } catch (error) {
     console.error('Error fetching navigation:', error);
     return NextResponse.json(
