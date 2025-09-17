@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import Banner from "../app/assets/banner/Contact 1.png";
+import Banner from "../app/assets/banner/banner.png";
 import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
@@ -246,7 +246,7 @@ export default function ClientCategoryPage({
           ) : (
             <Image
               src={Banner}
-              alt="Lovosis Technology Banner"
+              alt="Oasis Marine Trading LLC"
               fill
               className="object-cover object-center"
               priority

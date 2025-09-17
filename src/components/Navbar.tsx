@@ -389,10 +389,10 @@ export default function Navbar() {
                 isScrolled={isScrolled}
               />
               <ContactAction
-                href="tel:+966597015415"
+                href="tel:+971563096262"
                 icon={<Phone className="w-4 h-4" />}
                 label="Call"
-                tooltip="+966 59 701 5415"
+                tooltip="+971563096262"
                 isScrolled={isScrolled}
               />
               <ContactAction

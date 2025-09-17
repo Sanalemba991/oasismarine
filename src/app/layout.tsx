@@ -5,7 +5,7 @@ import "./globals.css";
 import ConditionalNavbar from "../components/ConditionalNavbar";
 import SessionProvider from "../components/SessionProvider";
 import ConditionalFooter from "@/components/ConditionalFooter";
-import favicon from "./favicon.ico";
+import favicon from "./favicon.jpg";
 import Whatsapp from '@/components/Whatsapp';
 
 const geistSans = Geist({
@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   ...defaultMetadata,
   icons: {
-    icon: '/favicon.ico'
+    icon: '/favicon.jpg'
   }
 };
 

@@ -337,25 +337,26 @@ export default function CategoriesClient() {
     );
   });
 
+  // Update the grid layout and spacing for better mobile responsiveness
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={pageVariants}
-      className="min-h-screen py-6 bg-gradient-to-br from-gray-50 to-white"
+      className="min-h-screen py-3 sm:py-6 bg-gradient-to-br from-gray-50 to-white"
     >
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
+      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-12 max-w-7xl">
         {/* Header Section */}
         <div id="header-section">
           <motion.div
             initial="hidden"
             animate={isHeaderInView ? "visible" : "hidden"}
             variants={headerVariants}
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-12"
           >
-            {/* Breadcrumb */}
-            <nav className="flex justify-center mb-6" aria-label="Breadcrumb">
+            {/* Breadcrumb - Hide on mobile */}
+            <nav className="hidden sm:flex justify-center mb-6" aria-label="Breadcrumb">
               <ol className="flex items-center space-x-2 text-sm text-gray-600">
                 <li>
                   <Link
@@ -376,7 +377,7 @@ export default function CategoriesClient() {
             </nav>
 
             <motion.h1
-              className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4"
               variants={headerVariants}
             >
               Product Categories
@@ -408,9 +409,9 @@ export default function CategoriesClient() {
             className="max-w-7xl mx-auto"
           >
             {/* Hero Search Section */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-6 sm:mb-12">
               {/* Main Centered Search Bar */}
-              <div className="max-w-2xl mx-auto mb-6">
+              <div className="max-w-2xl mx-auto px-2 sm:px-6 mb-4 sm:mb-6">
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
                     <MagnifyingGlassIcon className="h-6 w-6 text-gray-400" />
@@ -442,7 +443,7 @@ export default function CategoriesClient() {
         </div>
 
         {/* Products Section */}
-        <div id="products-section">
+        <div id="products-section" className="px-2 sm:px-0">
           <AnimatePresence mode="wait">
             {filteredSubcategories.length === 0 ? (
               <motion.div
@@ -519,7 +520,7 @@ export default function CategoriesClient() {
                 {/* Categories Grid */}
                 <motion.div
                   variants={containerVariants}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
                 >
                   {filteredSubcategories.map((subcategory) => (
                     <motion.div
@@ -535,7 +536,7 @@ export default function CategoriesClient() {
                       <Link href={subcategory.href} className="block h-full">
                         <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 group-hover:shadow-md border border-gray-200 h-full">
                           {/* Category Image */}
-                          <div className="bg-gray-50 relative overflow-hidden h-40">
+                          <div className="bg-gray-50 relative overflow-hidden h-32 sm:h-40">
                             {subcategory.image ? (
                               <div className="relative w-full h-full">
                                 {/* Main Product Image */}
@@ -585,13 +586,13 @@ export default function CategoriesClient() {
                           </div>
 
                           {/* Category Info */}
-                          <div className="p-4">
-                            <h3 className="text-base font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-200">
+                          <div className="p-3 sm:p-4">
+                            <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-200">
                               {subcategory.name}
                             </h3>
 
                             {/* Action Button */}
-                            <div className="mt-4">
+                            <div className="mt-2 sm:mt-4">
                               <motion.div
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -624,37 +625,37 @@ export default function CategoriesClient() {
           </AnimatePresence>
         </div>
 
-        {/* Brands Section - Moved outside of products section */}
-        <div id="brands-section" className="mt-20">
+        {/* Brands Section */}
+        <div id="brands-section" className="mt-12 sm:mt-20">
           <motion.section
-            className="relative bg-white py-16 z-20"
+            className="relative bg-white py-8 sm:py-16 z-20"
             initial="hidden"
             animate={isBrandsInView ? "visible" : "hidden"}
             variants={sectionVariants}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
               <motion.div
-                className="text-center mb-12"
+                className="text-center mb-8 sm:mb-12"
                 variants={headerVariants}
               >
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                   Our Trusted{" "}
                   <span className="text-[#1e3a8a]">Brands</span>
                 </h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">
                   We partner with leading manufacturers to bring you the highest
                   quality industrial products
                 </p>
               </motion.div>
 
               <motion.div
-                className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 items-center justify-items-center"
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-8 items-center justify-items-center"
                 variants={containerVariants}
               >
                 {brands.map((brand) => (
                   <motion.div
                     key={brand.id}
-                    className="relative w-32 h-20 hover:grayscale-0 transition-all duration-500 ease-in-out transform-gpu"
+                    className="relative w-24 sm:w-32 h-16 sm:h-20 hover:grayscale-0 transition-all duration-500 ease-in-out transform-gpu"
                     variants={itemVariants}
                     whileHover={{
                       scale: 1.15,
@@ -670,16 +671,11 @@ export default function CategoriesClient() {
                       alt={brand.name}
                       fill
                       className="object-contain transition-transform duration-300"
-                      sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
                     />
                   </motion.div>
                 ))}
               </motion.div>
-            </div>
-
-            {/* Decorative Elements */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-              <div className="w-full h-full bg-gradient-to-r from-blue-100 via-transparent to-blue-100" />
             </div>
           </motion.section>
         </div>
