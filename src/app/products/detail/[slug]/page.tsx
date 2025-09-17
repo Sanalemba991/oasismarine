@@ -160,7 +160,7 @@ export default function ProductDetail({
           setSelectedImage(data.product.detailImages[0]);
         }
       } else {
-        setError("Product not found");
+        setError("Product found");
       }
     } catch (error) {
       setError("Failed to load product");
