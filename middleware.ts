@@ -1,4 +1,18 @@
 import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+
+  // Add CORS headers
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  return response;
+}
 
 export default withAuth(
   // `withAuth` augments your `Request` with the user's token.
@@ -22,6 +36,7 @@ export default withAuth(
 export const config = {
   matcher: [
     '/profile/:path*',
+    '/api/:path*',
     // Add other protected routes here if needed
   ]
 }
