@@ -22,9 +22,7 @@ export default function Home() {
       <FAQ />
       <QHSEPolicySection />
       <Testimony/>
-      <Suspense fallback={<div>Loading...</div>}>
-        <ProductCategoriesSection />
-      </Suspense>
+    
     </div>
   );
 }
