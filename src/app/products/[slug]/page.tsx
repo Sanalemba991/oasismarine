@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import ClientCategoryPage from "@/components/ClientCategoryPage";
 import { Metadata } from "next";
+import { buildApiUrl } from "@/lib/api-url";
 
 interface Product {
   id: string;
@@ -54,7 +55,7 @@ async function fetchPageData(slug: string): Promise<{
     const currentPath = `/products/${slug}`;
 
     // Fetch navigation data
-    const navResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/navbar`, {
+    const navResponse = await fetch(buildApiUrl('/api/admin/navbar'), {
       cache: 'no-store' // or 'force-cache' depending on your needs
     });
 
@@ -85,7 +86,7 @@ async function fetchPageData(slug: string): Promise<{
 
       // Fetch products for category
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?categoryId=${foundCategory.id}`,
+        buildApiUrl(`/api/admin/products?categoryId=${foundCategory.id}`),
         { cache: 'no-store' }
       );
 
@@ -123,7 +124,7 @@ async function fetchPageData(slug: string): Promise<{
 
         // Fetch products for subcategory
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?subcategoryId=${foundSubcategory.id}`,
+          buildApiUrl(`/api/admin/products?subcategoryId=${foundSubcategory.id}`),
           { cache: 'no-store' }
         );
 

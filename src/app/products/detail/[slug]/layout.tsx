@@ -25,7 +25,12 @@ interface Product {
 // Function to fetch product data by slug
 async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/slug/${slug}`, {
+    // Get the base URL for API calls
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                   'http://localhost:3000';
+                   
+    const response = await fetch(`${baseUrl}/api/products/slug/${slug}`, {
       next: { revalidate: 0 },
       cache: 'no-store'
     });
