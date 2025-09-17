@@ -1,0 +1,28 @@
+{
+  "name": "Oasis Marine Trading LLC",
+  "short_name": "Oasis Marine",
+  "description": "Your trusted partner for marine equipment, supplies, and services in the UAE and Middle East region.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066cc",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "marine", "trading"],
+  "lang": "en-US",
+  "dir": "ltr"
+}

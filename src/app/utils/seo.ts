@@ -33,14 +33,9 @@ export const defaultMetadata: Metadata = {
         telephone: false,
     },
     icons: {
-        icon: './favicon.ico',
-        shortcut: '/favicon-16x16.png',
-        apple: '/apple-touch-icon.png',
-        other: {
-            rel: 'mask-icon',
-            url: '/safari-pinned-tab.svg',
-            color: '#5bbad5',
-        },
+        icon: '/favicon.jpg',
+        shortcut: '/favicon.jpg',
+        apple: '/favicon.jpg',
     },
     openGraph: {
         type: 'website',
