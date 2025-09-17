@@ -116,7 +116,7 @@ export async function generateMetadata({
       title: product.name,
       description: product.shortDescription || product.longDescription,
       images: product.cardImage ? [{ url: product.cardImage }] : [],
-      type: 'product',
+      type: 'website',
       siteName: 'Oasis Marine',
       locale: 'en_US',
     },
@@ -147,7 +147,7 @@ export async function generateMetadata({
       'marine equipment',
       'marine products',
       'Oasis Marine',
-    ].filter(Boolean),
+    ].filter(Boolean) as string[],
 
     other: {
       'og:type': 'product',
