@@ -48,7 +48,7 @@ function getBaseUrl() {
     return window.location.origin;
   }
   
-  // Server side
+  // Server side - prioritize VERCEL_URL for production
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
@@ -61,13 +61,80 @@ function getBaseUrl() {
   return 'http://localhost:3000';
 }
 
+// Fetch all paths for static generation
+async function fetchAllPaths() {
+  try {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/navbar`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    });
+
+    if (!response.ok) {
+      console.error(`Navigation API failed: ${response.status}`);
+      return { categories: [], subcategories: [] };
+    }
+
+    const navData = await response.json();
+    
+    if (!navData || !Array.isArray(navData.categories)) {
+      console.error('Invalid navigation data structure');
+      return { categories: [], subcategories: [] };
+    }
+
+    const categories = [];
+    const subcategories = [];
+
+    for (const category of navData.categories) {
+      if (category?.href) {
+        // Extract slug from href (e.g., "/products/marine-equipment" -> "marine-equipment")
+        const slug = category.href.replace('/products/', '');
+        if (slug && slug !== 'detail') {
+          categories.push({ slug });
+        }
+      }
+
+      // Process subcategories
+      if (category?.subcategories && Array.isArray(category.subcategories)) {
+        for (const subcategory of category.subcategories) {
+          if (subcategory?.href) {
+            const subSlug = subcategory.href.replace('/products/', '');
+            if (subSlug && subSlug !== 'detail') {
+              subcategories.push({ slug: subSlug });
+            }
+          }
+        }
+      }
+    }
+
+    return { categories, subcategories };
+  } catch (error) {
+    console.error("Error fetching paths:", error);
+    return { categories: [], subcategories: [] };
+  }
+}
+
+// Generate static params for all possible paths
+export async function generateStaticParams() {
+  const { categories, subcategories } = await fetchAllPaths();
+  
+  // Combine all possible slugs
+  const allSlugs = [...categories, ...subcategories];
+  
+  // If no paths are found, return an empty array to avoid build errors
+  if (allSlugs.length === 0) {
+    return [{ slug: 'fallback' }];
+  }
+  
+  return allSlugs;
+}
+
 async function fetchPageData(slug: string): Promise<{
   products: Product[];
   pageInfo: PageInfo;
 } | null> {
   try {
     // Skip processing for detail pages
-    if (slug === "detail") {
+    if (slug === "detail" || slug === "fallback") {
       return null;
     }
 
@@ -76,7 +143,7 @@ async function fetchPageData(slug: string): Promise<{
 
     // Fetch navigation data with better error handling
     const navResponse = await fetch(`${baseUrl}/api/admin/navbar`, {
-      next: { revalidate: 300 }, // Revalidate every 5 minutes instead of no-store
+      next: { revalidate: 300 }, // Revalidate every 5 minutes
       headers: {
         'Content-Type': 'application/json',
       },
@@ -84,7 +151,7 @@ async function fetchPageData(slug: string): Promise<{
 
     if (!navResponse.ok) {
       console.error(`Navigation API failed: ${navResponse.status} ${navResponse.statusText}`);
-      throw new Error(`Failed to fetch navigation data: ${navResponse.status}`);
+      return null;
     }
 
     const navData = await navResponse.json();
@@ -92,7 +159,7 @@ async function fetchPageData(slug: string): Promise<{
     // Ensure navData has the expected structure
     if (!navData || !Array.isArray(navData.categories)) {
       console.error('Invalid navigation data structure:', navData);
-      throw new Error('Invalid navigation data structure');
+      return null;
     }
 
     let foundCategory = null;
@@ -132,7 +199,7 @@ async function fetchPageData(slug: string): Promise<{
         return { products: filteredProducts, pageInfo };
       } else {
         console.error(`Products API failed for category: ${response.status} ${response.statusText}`);
-        throw new Error(`Failed to fetch products for category: ${response.status}`);
+        return { products: [], pageInfo }; // Return empty products but keep pageInfo
       }
     } else {
       // Check if it's a subcategory
@@ -178,7 +245,7 @@ async function fetchPageData(slug: string): Promise<{
           return { products: filteredProducts, pageInfo };
         } else {
           console.error(`Products API failed for subcategory: ${response.status} ${response.statusText}`);
-          throw new Error(`Failed to fetch products for subcategory: ${response.status}`);
+          return { products: [], pageInfo }; // Return empty products but keep pageInfo
         }
       }
     }
@@ -199,6 +266,13 @@ export async function generateMetadata({
   try {
     const resolvedParams = await params;
     const { slug } = resolvedParams;
+    
+    if (slug === "detail" || slug === "fallback") {
+      return {
+        title: "Products | Oasis Marine Trading LLC",
+        description: "Explore our comprehensive range of marine and industrial products.",
+      };
+    }
     
     // Fetch data to get the actual category/subcategory name
     const data = await fetchPageData(slug);
@@ -240,7 +314,15 @@ export async function generateMetadata({
     console.error('Error generating metadata:', error);
     
     // Fallback metadata
-    const categoryName = (await params).slug
+    const slug = (await params).slug;
+    if (slug === "detail" || slug === "fallback") {
+      return {
+        title: "Products | Oasis Marine Trading LLC",
+        description: "Explore our comprehensive range of marine and industrial products.",
+      };
+    }
+    
+    const categoryName = slug
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
@@ -285,6 +367,18 @@ export default async function DynamicCategorySubcategoryPage({
 
 async function CategoryContent({ params }: { params: { slug: string } }) {
   const { slug } = params;
+  
+  // Handle fallback case
+  if (slug === "fallback") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Loading...</h1>
+          <p className="text-gray-600">Please wait while we load the products.</p>
+        </div>
+      </div>
+    );
+  }
   
   try {
     // Fetch data on the server
