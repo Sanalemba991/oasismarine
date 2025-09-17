@@ -343,7 +343,7 @@ export default function CategoriesClient() {
       initial="hidden"
       animate="visible"
       variants={pageVariants}
-      className="min-h-screen py-3 sm:py-6 bg-gradient-to-br from-gray-50 to-white"
+      className="mt-9 py-9 sm:py-6 bg-gradient-to-br from-gray-50 to-white"
     >
       {/* Main Content */}
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-12 max-w-7xl">

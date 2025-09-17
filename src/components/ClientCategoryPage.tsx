@@ -123,7 +123,7 @@ export default function ClientCategoryPage({
   pageInfo,
   slug,
 }: DynamicCategoryClientProps) {
-  const [products] = useState<Product[]>(initialProducts);
+  const [products] = useState<Product[]>(initialProducts || []);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
@@ -132,128 +132,153 @@ export default function ClientCategoryPage({
   const [isFiltersInView, setIsFiltersInView] = useState(false);
   const [isProductsInView, setIsProductsInView] = useState(false);
   const [isCtaInView, setIsCtaInView] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Fix hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
+    // Only run on client side after mount
+    if (!isMounted) return;
+    
     // Set up scroll event listener to detect when sections are in view
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight;
+      try {
+        const scrollPosition = window.scrollY + window.innerHeight;
 
-      // Header section
-      const headerSection = document.getElementById("header-section");
-      if (headerSection) {
-        const headerPosition = headerSection.offsetTop;
-        if (scrollPosition > headerPosition + 100) {
-          setIsHeaderInView(true);
+        // Header section
+        const headerSection = document.getElementById("header-section");
+        if (headerSection) {
+          const headerPosition = headerSection.offsetTop;
+          if (scrollPosition > headerPosition + 100) {
+            setIsHeaderInView(true);
+          }
         }
-      }
 
-      // Filters section
-      const filtersSection = document.getElementById("filters-section");
-      if (filtersSection) {
-        const filtersPosition = filtersSection.offsetTop;
-        if (scrollPosition > filtersPosition + 100) {
-          setIsFiltersInView(true);
+        // Filters section
+        const filtersSection = document.getElementById("filters-section");
+        if (filtersSection) {
+          const filtersPosition = filtersSection.offsetTop;
+          if (scrollPosition > filtersPosition + 100) {
+            setIsFiltersInView(true);
+          }
         }
-      }
 
-      // Products section
-      const productsSection = document.getElementById("products-section");
-      if (productsSection) {
-        const productsPosition = productsSection.offsetTop;
-        if (scrollPosition > productsPosition + 100) {
-          setIsProductsInView(true);
+        // Products section
+        const productsSection = document.getElementById("products-section");
+        if (productsSection) {
+          const productsPosition = productsSection.offsetTop;
+          if (scrollPosition > productsPosition + 100) {
+            setIsProductsInView(true);
+          }
         }
-      }
 
-      // CTA section
-      const ctaSection = document.getElementById("cta-section");
-      if (ctaSection) {
-        const ctaPosition = ctaSection.offsetTop;
-        if (scrollPosition > ctaPosition + 100) {
-          setIsCtaInView(true);
+        // CTA section
+        const ctaSection = document.getElementById("cta-section");
+        if (ctaSection) {
+          const ctaPosition = ctaSection.offsetTop;
+          if (scrollPosition > ctaPosition + 100) {
+            setIsCtaInView(true);
+          }
         }
+      } catch (error) {
+        console.error("Error in scroll handler:", error);
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     // Trigger once on mount to check initial state
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isMounted]);
 
-  // Filter and sort products
+  // Filter and sort products with safety checks
   const filteredProducts = products
     .filter((product) => {
+      if (!product) return false;
+      
       const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.shortDescription
+        (product.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.shortDescription || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
       if (filterBy === "all") return matchesSearch;
       if (filterBy === "featured")
-        return matchesSearch && product.reviewsData?.averageRating > 4;
-      if (filterBy === "new")
-        return (
-          matchesSearch &&
-          new Date(product.createdAt) >
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        );
+        return matchesSearch && (product.reviewsData?.averageRating || 0) > 4;
+      if (filterBy === "new") {
+        try {
+          return (
+            matchesSearch &&
+            new Date(product.createdAt) >
+              new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          );
+        } catch {
+          return matchesSearch;
+        }
+      }
 
       return matchesSearch;
     })
     .sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "rating":
-          return (
-            (b.reviewsData?.averageRating || 0) -
-            (a.reviewsData?.averageRating || 0)
-          );
-        case "newest":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        default:
-          return 0;
+      try {
+        switch (sortBy) {
+          case "name":
+            return (a.name || "").localeCompare(b.name || "");
+          case "rating":
+            return (
+              (b.reviewsData?.averageRating || 0) -
+              (a.reviewsData?.averageRating || 0)
+            );
+          case "newest":
+            return (
+              new Date(b.createdAt || 0).getTime() - 
+              new Date(a.createdAt || 0).getTime()
+            );
+          default:
+            return 0;
+        }
+      } catch {
+        return 0;
       }
     });
 
   const totalItems = filteredProducts.length;
+
+  // Prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Enhanced Banner Section - Dynamic content based on pageInfo */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        aria-label="About Lovosis Technology"
+        aria-label={`About ${pageInfo?.name || 'Products'}`}
       >
         {/* Banner Background with Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           {/* Use page-specific image if available, otherwise use default banner */}
-          {pageInfo.image ? (
-            <Image
-              src={Banner}
-              alt={pageInfo.name}
-              fill
-              className="object-cover object-center"
-              priority
-              quality={90}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-            />
-          ) : (
-            <Image
-              src={Banner}
-              alt="Oasis Marine Trading LLC"
-              fill
-              className="object-cover object-center"
-              priority
-              quality={90}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-            />
-          )}
+          <Image
+            src={ Banner}
+            alt={pageInfo?.name || "Oasis Marine Trading LLC"}
+            fill
+            className="object-cover object-center"
+            priority
+            quality={90}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          />
 
           {/* Gradient overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-cyan-900/60"></div>
@@ -316,7 +341,7 @@ export default function ClientCategoryPage({
               >
                 Discover{" "}
                 <span className="text-[#87C0CD] drop-shadow-lg">
-                  {pageInfo.name}
+                  {pageInfo?.name || 'Our Products'}
                 </span>
               </motion.h1>
 
@@ -334,8 +359,8 @@ export default function ClientCategoryPage({
                 }}
                 className="text-lg sm:text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed max-w-2xl drop-shadow-md"
               >
-                {pageInfo.description ||
-                  `Explore our comprehensive range of high-quality ${pageInfo.name.toLowerCase()} products engineered to meet the demanding requirements of marine and industrial applications.`}
+                {pageInfo?.description ||
+                  `Explore our comprehensive range of high-quality ${(pageInfo?.name || 'product').toLowerCase()} products engineered to meet the demanding requirements of marine and industrial applications.`}
               </motion.p>
             </motion.div>
           </div>
@@ -403,7 +428,7 @@ export default function ClientCategoryPage({
                 <li className="flex items-center">
                   <span className="mx-2">/</span>
                   <span className="text-blue-600 font-medium capitalize">
-                    {pageInfo.name.toLowerCase()}
+                    {(pageInfo?.name || 'category').toLowerCase()}
                   </span>
                 </li>
               </ol>
@@ -413,7 +438,7 @@ export default function ClientCategoryPage({
               className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
               variants={headerVariants}
             >
-              {pageInfo.name}
+              {pageInfo?.name || 'Products'}
             </motion.h1>
 
             <motion.div
@@ -424,7 +449,7 @@ export default function ClientCategoryPage({
               {totalItems} Products
             </motion.div>
 
-            {pageInfo.description && (
+            {pageInfo?.description && (
               <motion.p
                 className="text-base text-gray-600 max-w-2xl mx-auto"
                 variants={headerVariants}
@@ -474,8 +499,6 @@ export default function ClientCategoryPage({
                 </div>
               </div>
             </div>
-
-            {/* Filter Controls Bar */}
           </motion.div>
         </div>
 
@@ -503,7 +526,7 @@ export default function ClientCategoryPage({
                 <p className="text-gray-600 mb-8">
                   {searchTerm
                     ? `No products match your search "${searchTerm}"`
-                    : `No products are currently available in this ${pageInfo.type}.`}
+                    : `No products are currently available in this ${pageInfo?.type || 'category'}.`}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   {searchTerm && (
@@ -593,7 +616,7 @@ export default function ClientCategoryPage({
                               src={
                                 product.cardImage || "/images/placeholder.jpg"
                               }
-                              alt={product.name}
+                              alt={product.name || "Product"}
                               fill
                               unoptimized={true}
                               sizes={
@@ -606,7 +629,7 @@ export default function ClientCategoryPage({
 
                             {/* Watermark (Centered) */}
                             <Image
-                              src="/logo.png" // replace with your watermark file
+                              src="/logo.png"
                               alt="Watermark"
                               width={120}
                               height={120}
@@ -615,8 +638,14 @@ export default function ClientCategoryPage({
                           </div>
 
                           {/* Badges */}
-                          {new Date(product.createdAt) >
-                            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+                          {(() => {
+                            try {
+                              return new Date(product.createdAt) >
+                                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                            } catch {
+                              return false;
+                            }
+                          })() && (
                             <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -667,21 +696,21 @@ export default function ClientCategoryPage({
                               }`}
                             >
                               <h3 className="text-base font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                                {product.name}
+                                {product.name || "Untitled Product"}
                               </h3>
                               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-3">
-                                {product.shortDescription}
+                                {product.shortDescription || "No description available"}
                               </p>
 
                               {/* Rating */}
-                              {product.reviewsData?.averageRating > 0 && (
+                              {(product.reviewsData?.averageRating || 0) > 0 && (
                                 <div className="flex items-center mb-3">
                                   <div className="flex items-center">
                                     {[...Array(5)].map((_, i) => (
                                       <StarIconSolid
                                         key={i}
                                         className={`h-4 w-4 ${
-                                          i < product.reviewsData.averageRating
+                                          i < (product.reviewsData?.averageRating || 0)
                                             ? "text-yellow-400"
                                             : "text-gray-300"
                                         }`}
@@ -689,7 +718,7 @@ export default function ClientCategoryPage({
                                     ))}
                                   </div>
                                   <span className="ml-2 text-sm text-gray-600">
-                                    ({product.reviewsData.totalReviews || 0})
+                                    ({product.reviewsData?.totalReviews || 0})
                                   </span>
                                 </div>
                               )}
@@ -736,8 +765,6 @@ export default function ClientCategoryPage({
             )}
           </AnimatePresence>
         </div>
-
-        {/* Call to Action Section */}
       </div>
     </div>
   );
