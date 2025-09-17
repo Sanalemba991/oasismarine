@@ -41,134 +41,35 @@ interface PageInfo {
   image?: string;
 }
 
-// Get the base URL for API calls
-function getBaseUrl() {
-  if (typeof window !== 'undefined') {
-    // Client side
-    return window.location.origin;
-  }
-  
-  // Server side - prioritize VERCEL_URL for production
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  
-  // Fallback for development
-  return 'http://localhost:3000';
-}
-
-// Fetch all paths for static generation
-async function fetchAllPaths() {
-  try {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/admin/navbar`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    });
-
-    if (!response.ok) {
-      console.error(`Navigation API failed: ${response.status}`);
-      return { categories: [], subcategories: [] };
-    }
-
-    const navData = await response.json();
-    
-    if (!navData || !Array.isArray(navData.categories)) {
-      console.error('Invalid navigation data structure');
-      return { categories: [], subcategories: [] };
-    }
-
-    const categories = [];
-    const subcategories = [];
-
-    for (const category of navData.categories) {
-      if (category?.href) {
-        // Extract slug from href (e.g., "/products/marine-equipment" -> "marine-equipment")
-        const slug = category.href.replace('/products/', '');
-        if (slug && slug !== 'detail') {
-          categories.push({ slug });
-        }
-      }
-
-      // Process subcategories
-      if (category?.subcategories && Array.isArray(category.subcategories)) {
-        for (const subcategory of category.subcategories) {
-          if (subcategory?.href) {
-            const subSlug = subcategory.href.replace('/products/', '');
-            if (subSlug && subSlug !== 'detail') {
-              subcategories.push({ slug: subSlug });
-            }
-          }
-        }
-      }
-    }
-
-    return { categories, subcategories };
-  } catch (error) {
-    console.error("Error fetching paths:", error);
-    return { categories: [], subcategories: [] };
-  }
-}
-
-// Generate static params for all possible paths
-export async function generateStaticParams() {
-  const { categories, subcategories } = await fetchAllPaths();
-  
-  // Combine all possible slugs
-  const allSlugs = [...categories, ...subcategories];
-  
-  // If no paths are found, return an empty array to avoid build errors
-  if (allSlugs.length === 0) {
-    return [{ slug: 'fallback' }];
-  }
-  
-  return allSlugs;
-}
-
 async function fetchPageData(slug: string): Promise<{
   products: Product[];
   pageInfo: PageInfo;
 } | null> {
   try {
     // Skip processing for detail pages
-    if (slug === "detail" || slug === "fallback") {
+    if (slug === "detail") {
       return null;
     }
 
-    const baseUrl = getBaseUrl();
     const currentPath = `/products/${slug}`;
 
-    // Fetch navigation data with better error handling
-    const navResponse = await fetch(`${baseUrl}/api/admin/navbar`, {
-      next: { revalidate: 300 }, // Revalidate every 5 minutes
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Fetch navigation data
+    const navResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/navbar`, {
+      cache: 'no-store' // or 'force-cache' depending on your needs
     });
 
     if (!navResponse.ok) {
-      console.error(`Navigation API failed: ${navResponse.status} ${navResponse.statusText}`);
-      return null;
+      throw new Error("Failed to fetch navigation data");
     }
 
     const navData = await navResponse.json();
-    
-    // Ensure navData has the expected structure
-    if (!navData || !Array.isArray(navData.categories)) {
-      console.error('Invalid navigation data structure:', navData);
-      return null;
-    }
-
     let foundCategory = null;
     let foundSubcategory = null;
     let parentCategory = null;
 
     // Check if it's a category
-    foundCategory = navData.categories.find(
-      (cat: any) => cat?.href === currentPath
+    foundCategory = navData.categories?.find(
+      (cat: any) => cat.href === currentPath
     );
 
     if (foundCategory) {
@@ -184,13 +85,8 @@ async function fetchPageData(slug: string): Promise<{
 
       // Fetch products for category
       const response = await fetch(
-        `${baseUrl}/api/admin/products?categoryId=${encodeURIComponent(foundCategory.id)}`,
-        { 
-          next: { revalidate: 300 },
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?categoryId=${foundCategory.id}`,
+        { cache: 'no-store' }
       );
 
       if (response.ok) {
@@ -198,20 +94,17 @@ async function fetchPageData(slug: string): Promise<{
         const filteredProducts = data.products?.filter((product: Product) => product.isActive) || [];
         return { products: filteredProducts, pageInfo };
       } else {
-        console.error(`Products API failed for category: ${response.status} ${response.statusText}`);
-        return { products: [], pageInfo }; // Return empty products but keep pageInfo
+        throw new Error("Failed to fetch products for category");
       }
     } else {
       // Check if it's a subcategory
-      for (const category of navData.categories) {
-        if (category?.subcategories && Array.isArray(category.subcategories)) {
-          foundSubcategory = category.subcategories.find(
-            (sub: any) => sub?.href === currentPath
-          );
-          if (foundSubcategory) {
-            parentCategory = category;
-            break;
-          }
+      for (const category of navData.categories || []) {
+        foundSubcategory = category.subcategories?.find(
+          (sub: any) => sub.href === currentPath
+        );
+        if (foundSubcategory) {
+          parentCategory = category;
+          break;
         }
       }
 
@@ -230,13 +123,8 @@ async function fetchPageData(slug: string): Promise<{
 
         // Fetch products for subcategory
         const response = await fetch(
-          `${baseUrl}/api/admin/products?subcategoryId=${encodeURIComponent(foundSubcategory.id)}`,
-          { 
-            next: { revalidate: 300 },
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?subcategoryId=${foundSubcategory.id}`,
+          { cache: 'no-store' }
         );
 
         if (response.ok) {
@@ -244,13 +132,11 @@ async function fetchPageData(slug: string): Promise<{
           const filteredProducts = data.products?.filter((product: Product) => product.isActive) || [];
           return { products: filteredProducts, pageInfo };
         } else {
-          console.error(`Products API failed for subcategory: ${response.status} ${response.statusText}`);
-          return { products: [], pageInfo }; // Return empty products but keep pageInfo
+          throw new Error("Failed to fetch products for subcategory");
         }
       }
     }
 
-    console.error(`No category or subcategory found for slug: ${slug}`);
     return null;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -263,79 +149,45 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  try {
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
-    
-    if (slug === "detail" || slug === "fallback") {
-      return {
-        title: "Products | Oasis Marine Trading LLC",
-        description: "Explore our comprehensive range of marine and industrial products.",
-      };
-    }
-    
-    // Fetch data to get the actual category/subcategory name
-    const data = await fetchPageData(slug);
-    
-    let title = "Products | Oasis Marine Trading LLC";
-    let description = "Explore our comprehensive range of marine and industrial products.";
-    
-    if (data?.pageInfo) {
-      const { pageInfo } = data;
-      title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
-      description = pageInfo.description || `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
-    } else {
-      // Fallback to slug-based title if data fetching fails
-      const categoryName = slug
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      title = `${categoryName} Products | Oasis Marine Trading LLC`;
-      description = `Explore our comprehensive range of ${categoryName.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
-    }
-
-    return {
-      title,
-      description,
-      keywords: `${data?.pageInfo?.name || slug}, industrial products, marine supplies, Oasis Marine products, UAE industrial solutions`,
-      openGraph: {
-        title,
-        description,
-        type: 'website',
-        url: `https://oasismarineuae.com/products/${slug}`,
-      },
-      robots: {
-        index: true,
-        follow: true,
-      },
-    };
-  } catch (error) {
-    console.error('Error generating metadata:', error);
-    
-    // Fallback metadata
-    const slug = (await params).slug;
-    if (slug === "detail" || slug === "fallback") {
-      return {
-        title: "Products | Oasis Marine Trading LLC",
-        description: "Explore our comprehensive range of marine and industrial products.",
-      };
-    }
-    
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+  
+  // Fetch data to get the actual category/subcategory name
+  const data = await fetchPageData(slug);
+  
+  let title = "Products | Oasis Marine Trading LLC";
+  let description = "Explore our comprehensive range of marine and industrial products.";
+  
+  if (data) {
+    const { pageInfo } = data;
+    title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
+    description = pageInfo.description || `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+  } else {
+    // Fallback to slug-based title if data fetching fails
     const categoryName = slug
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
     
-    return {
-      title: `${categoryName} Products | Oasis Marine Trading LLC`,
-      description: `Explore our comprehensive range of ${categoryName.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`,
-      robots: {
-        index: true,
-        follow: true,
-      },
-    };
+    title = `${categoryName} Products | Oasis Marine Trading LLC`;
+    description = `Explore our comprehensive range of ${categoryName} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
   }
+
+  return {
+    title,
+    description,
+    keywords: `${data?.pageInfo.name || slug}, industrial products, marine supplies, Oasis Marine products, UAE industrial solutions`,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `https://oasismarineuae.com/products/${slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }
 
 export default async function DynamicCategorySubcategoryPage({
@@ -348,7 +200,7 @@ export default async function DynamicCategorySubcategoryPage({
 
   // Handle detail pages - return null to let Next.js handle routing
   if (slug === "detail") {
-    notFound();
+    return null;
   }
 
   return (
@@ -368,38 +220,21 @@ export default async function DynamicCategorySubcategoryPage({
 async function CategoryContent({ params }: { params: { slug: string } }) {
   const { slug } = params;
   
-  // Handle fallback case
-  if (slug === "fallback") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Loading...</h1>
-          <p className="text-gray-600">Please wait while we load the products.</p>
-        </div>
-      </div>
-    );
-  }
-  
-  try {
-    // Fetch data on the server
-    const data = await fetchPageData(slug);
+  // Fetch data on the server
+  const data = await fetchPageData(slug);
 
-    if (!data) {
-      notFound();
-    }
-
-    const { products, pageInfo } = data;
-
-    // Pass data to client component
-    return (
-      <ClientCategoryPage
-        initialProducts={products}
-        pageInfo={pageInfo}
-        slug={slug}
-      />
-    );
-  } catch (error) {
-    console.error('Error in CategoryContent:', error);
+  if (!data) {
     notFound();
   }
+
+  const { products, pageInfo } = data;
+
+  // Pass data to client component
+  return (
+    <ClientCategoryPage
+      initialProducts={products}
+      pageInfo={pageInfo}
+      slug={slug}
+    />
+  );
 }
