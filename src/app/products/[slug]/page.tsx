@@ -41,6 +41,16 @@ interface PageInfo {
   image?: string;
 }
 
+// Get the base URL for API calls
+function getBaseUrl() {
+  // For production, use the full domain
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_BASE_URL || 'https://oasismarineuae.com';
+  }
+  // For development
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+}
+
 async function fetchPageData(slug: string): Promise<{
   products: Product[];
   pageInfo: PageInfo;
@@ -51,17 +61,22 @@ async function fetchPageData(slug: string): Promise<{
       return null;
     }
 
+    const baseUrl = getBaseUrl();
     const currentPath = `/products/${slug}`;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-    // Fetch navigation data
-    const navResponse = await fetch(`${apiUrl}/api/admin/navbar`, {
-      cache: "no-store",
+    console.log(`Fetching navigation data from: ${baseUrl}/api/admin/navbar`);
+
+    // Fetch navigation data with better error handling
+    const navResponse = await fetch(`${baseUrl}/api/admin/navbar`, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!navResponse.ok) {
-      console.error(`Navigation fetch failed: ${navResponse.status}`);
-      throw new Error("Failed to fetch navigation data");
+      console.error(`Navigation API failed with status: ${navResponse.status}`);
+      throw new Error(`Failed to fetch navigation data: ${navResponse.status}`);
     }
 
     const navData = await navResponse.json();
@@ -69,85 +84,101 @@ async function fetchPageData(slug: string): Promise<{
     let foundSubcategory = null;
     let parentCategory = null;
 
+    // Safely check if categories exist
+    const categories = navData?.categories || [];
+
     // Check if it's a category
-    foundCategory = navData.categories?.find(
-      (cat: any) => cat.href === currentPath
+    foundCategory = categories.find(
+      (cat: any) => cat?.href === currentPath
     );
 
     if (foundCategory) {
       const pageInfo: PageInfo = {
-        id: foundCategory.id || "",
-        name: foundCategory.name || "Category",
+        id: foundCategory.id,
+        name: foundCategory.name,
         type: "category",
         description:
           foundCategory.description ||
-          `Explore our comprehensive range of ${foundCategory.name?.toLowerCase() || "products"}`,
-        image: foundCategory.image || "",
+          `Explore our comprehensive range of ${foundCategory.name.toLowerCase()} products`,
+        image: foundCategory.image,
       };
 
       // Fetch products for category
-      const response = await fetch(
-        `${apiUrl}/api/admin/products?categoryId=${foundCategory.id}`,
-        { cache: "no-store" }
-      );
+      const productsUrl = `${baseUrl}/api/admin/products?categoryId=${foundCategory.id}`;
+      console.log(`Fetching products from: ${productsUrl}`);
+      
+      const response = await fetch(productsUrl, {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();
-        const filteredProducts = (data.products || []).filter(
-          (product: Product) => product.isActive
-        );
+        const filteredProducts = data?.products?.filter((product: Product) => product?.isActive) || [];
         return { products: filteredProducts, pageInfo };
       } else {
-        console.error(`Products fetch failed for category: ${response.status}`);
-        throw new Error("Failed to fetch products for category");
+        console.error(`Products API failed with status: ${response.status}`);
+        throw new Error(`Failed to fetch products for category: ${response.status}`);
       }
     } else {
       // Check if it's a subcategory
-      for (const category of navData.categories || []) {
-        foundSubcategory = category.subcategories?.find(
-          (sub: any) => sub.href === currentPath
-        );
-        if (foundSubcategory) {
-          parentCategory = category;
-          break;
+      for (const category of categories) {
+        if (category?.subcategories) {
+          foundSubcategory = category.subcategories.find(
+            (sub: any) => sub?.href === currentPath
+          );
+          if (foundSubcategory) {
+            parentCategory = category;
+            break;
+          }
         }
       }
 
       if (foundSubcategory && parentCategory) {
         const pageInfo: PageInfo = {
-          id: foundSubcategory.id || "",
-          name: foundSubcategory.name || "Subcategory",
+          id: foundSubcategory.id,
+          name: foundSubcategory.name,
           type: "subcategory",
           parentCategory: parentCategory.name,
           parentCategoryId: parentCategory.id,
           description:
             foundSubcategory.description ||
-            `Professional ${foundSubcategory.name?.toLowerCase() || "solutions"} for your industrial needs`,
-          image: foundSubcategory.image || "",
+            `Professional ${foundSubcategory.name.toLowerCase()} solutions for your industrial needs`,
+          image: foundSubcategory.image,
         };
 
         // Fetch products for subcategory
-        const response = await fetch(
-          `${apiUrl}/api/admin/products?subcategoryId=${foundSubcategory.id}`,
-          { cache: "no-store" }
-        );
+        const productsUrl = `${baseUrl}/api/admin/products?subcategoryId=${foundSubcategory.id}`;
+        console.log(`Fetching subcategory products from: ${productsUrl}`);
+        
+        const response = await fetch(productsUrl, {
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (response.ok) {
           const data = await response.json();
-          const filteredProducts = (data.products || []).filter(
-            (product: Product) => product.isActive
-          );
+          const filteredProducts = data?.products?.filter((product: Product) => product?.isActive) || [];
           return { products: filteredProducts, pageInfo };
         } else {
-          console.error(`Products fetch failed for subcategory: ${response.status}`);
-          throw new Error("Failed to fetch products for subcategory");
+          console.error(`Subcategory products API failed with status: ${response.status}`);
+          throw new Error(`Failed to fetch products for subcategory: ${response.status}`);
         }
       }
     }
 
+    console.log(`No matching category or subcategory found for slug: ${slug}`);
     return null;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching page data:", error);
+    // In development, you might want to throw the error to see it in the browser
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Full error details:", error);
+    }
     return null;
   }
 }
@@ -157,46 +188,63 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const resolvedParams = await params;
-  const { slug } = resolvedParams;
+  try {
+    const resolvedParams = await params;
+    const { slug } = resolvedParams;
+    
+    // Fetch data to get the actual category/subcategory name
+    const data = await fetchPageData(slug);
+    
+    let title = "Products | Oasis Marine Trading LLC";
+    let description = "Explore our comprehensive range of marine and industrial products.";
+    
+    if (data?.pageInfo) {
+      const { pageInfo } = data;
+      title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
+      description = pageInfo.description || `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+    } else {
+      // Fallback to slug-based title if data fetching fails
+      const categoryName = slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      title = `${categoryName} Products | Oasis Marine Trading LLC`;
+      description = `Explore our comprehensive range of ${categoryName.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+    }
 
-  // Fetch data to get the actual category/subcategory name
-  const data = await fetchPageData(slug);
-
-  let title = "Products | Oasis Marine Trading LLC";
-  let description = "Explore our comprehensive range of marine and industrial products.";
-
-  if (data) {
-    const { pageInfo } = data;
-    title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
-    description =
-      pageInfo.description ||
-      `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
-  } else {
-    // Fallback to slug-based title if data fetching fails
-    const categoryName = slug
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-    title = `${categoryName} Products | Oasis Marine Trading LLC`;
-    description = `Explore our comprehensive range of ${categoryName.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
-  }
-
-  return {
-    title,
-    description,
-    keywords: `${data?.pageInfo.name || slug}, industrial products, marine supplies, Oasis Marine products, UAE industrial solutions`,
-    openGraph: {
+    return {
       title,
       description,
-      type: "website",
-      url: `https://oasismarineuae.com/products/${slug}`,
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
+      keywords: `${data?.pageInfo?.name || slug}, industrial products, marine supplies, Oasis Marine products, UAE industrial solutions`,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        url: `https://oasismarineuae.com/products/${slug}`,
+        siteName: 'Oasis Marine Trading LLC',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+      },
+      robots: {
+        index: true,
+        follow: true,
+      },
+      alternates: {
+        canonical: `https://oasismarineuae.com/products/${slug}`,
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    // Return fallback metadata
+    return {
+      title: "Products | Oasis Marine Trading LLC",
+      description: "Explore our comprehensive range of marine and industrial products.",
+    };
+  }
 }
 
 export default async function DynamicCategorySubcategoryPage({
@@ -204,48 +252,83 @@ export default async function DynamicCategorySubcategoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const resolvedParams = await params;
-  const { slug } = resolvedParams;
+  try {
+    const resolvedParams = await params;
+    const { slug } = resolvedParams;
 
-  // Handle detail pages - return null to let Next.js handle routing
-  if (slug === "detail") {
-    return null;
+    // Handle detail pages - return null to let Next.js handle routing
+    if (slug === "detail") {
+      return null;
+    }
+
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <CategoryContent params={{ slug }} />
+      </Suspense>
+    );
+  } catch (error) {
+    console.error("Error in DynamicCategorySubcategoryPage:", error);
+    return <ErrorFallback />;
   }
+}
 
+function LoadingFallback() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
-            <p className="text-xl text-gray-600">Loading products...</p>
-          </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
+        <p className="text-xl text-gray-600">Loading products...</p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto px-4">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
         </div>
-      }
-    >
-      <CategoryContent params={{ slug }} />
-    </Suspense>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+        <p className="text-gray-600 mb-4">We're having trouble loading this page. Please try again later.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Reload Page
+        </button>
+      </div>
+    </div>
   );
 }
 
 async function CategoryContent({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+  try {
+    const { slug } = params;
+    
+    // Fetch data on the server
+    const data = await fetchPageData(slug);
 
-  // Fetch data on the server
-  const data = await fetchPageData(slug);
+    if (!data) {
+      console.log(`No data found for slug: ${slug}, triggering notFound`);
+      notFound();
+    }
 
-  if (!data) {
-    notFound();
+    const { products, pageInfo } = data;
+
+    // Pass data to client component
+    return (
+      <ClientCategoryPage
+        initialProducts={products || []}
+        pageInfo={pageInfo}
+        slug={slug}
+      />
+    );
+  } catch (error) {
+    console.error("Error in CategoryContent:", error);
+    return <ErrorFallback />;
   }
-
-  const { products, pageInfo } = data;
-
-  // Pass data to client component
-  return (
-    <ClientCategoryPage
-      initialProducts={products}
-      pageInfo={pageInfo}
-      slug={slug}
-    />
-  );
 }
