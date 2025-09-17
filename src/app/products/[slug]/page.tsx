@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import ClientCategoryPage from "@/components/ClientCategoryPage";
+import { Metadata } from "next";
+
 interface Product {
   id: string;
   name: string;
@@ -141,6 +144,52 @@ async function fetchPageData(slug: string): Promise<{
   }
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+  
+  // Fetch data to get the actual category/subcategory name
+  const data = await fetchPageData(slug);
+  
+  let title = "Products | Oasis Marine Trading LLC";
+  let description = "Explore our comprehensive range of marine and industrial products.";
+  
+  if (data) {
+    const { pageInfo } = data;
+    title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
+    description = pageInfo.description || `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+  } else {
+    // Fallback to slug-based title if data fetching fails
+    const categoryName = slug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    title = `${categoryName} Products | Oasis Marine Trading LLC`;
+    description = `Explore our comprehensive range of ${categoryName} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+  }
+
+  return {
+    title,
+    description,
+    keywords: `${data?.pageInfo.name || slug}, industrial products, marine supplies, Oasis Marine products, UAE industrial solutions`,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `https://oasismarineuae.com/products/${slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
 export default async function DynamicCategorySubcategoryPage({
   params,
 }: {
@@ -154,6 +203,23 @@ export default async function DynamicCategorySubcategoryPage({
     return null;
   }
 
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
+          <p className="text-xl text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    }>
+      <CategoryContent params={{ slug }} />
+    </Suspense>
+  );
+}
+
+async function CategoryContent({ params }: { params: { slug: string } }) {
+  const { slug } = params;
+  
   // Fetch data on the server
   const data = await fetchPageData(slug);
 
