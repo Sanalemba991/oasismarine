@@ -52,13 +52,15 @@ async function fetchPageData(slug: string): Promise<{
     }
 
     const currentPath = `/products/${slug}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
     // Fetch navigation data
-    const navResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/navbar`, {
-      cache: 'no-store' // or 'force-cache' depending on your needs
+    const navResponse = await fetch(`${apiUrl}/api/admin/navbar`, {
+      cache: "no-store",
     });
 
     if (!navResponse.ok) {
+      console.error(`Navigation fetch failed: ${navResponse.status}`);
       throw new Error("Failed to fetch navigation data");
     }
 
@@ -74,26 +76,29 @@ async function fetchPageData(slug: string): Promise<{
 
     if (foundCategory) {
       const pageInfo: PageInfo = {
-        id: foundCategory.id,
-        name: foundCategory.name,
+        id: foundCategory.id || "",
+        name: foundCategory.name || "Category",
         type: "category",
         description:
           foundCategory.description ||
-          `Explore our comprehensive range of ${foundCategory.name.toLowerCase()} products`,
-        image: foundCategory.image,
+          `Explore our comprehensive range of ${foundCategory.name?.toLowerCase() || "products"}`,
+        image: foundCategory.image || "",
       };
 
       // Fetch products for category
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?categoryId=${foundCategory.id}`,
-        { cache: 'no-store' }
+        `${apiUrl}/api/admin/products?categoryId=${foundCategory.id}`,
+        { cache: "no-store" }
       );
 
       if (response.ok) {
         const data = await response.json();
-        const filteredProducts = data.products?.filter((product: Product) => product.isActive) || [];
+        const filteredProducts = (data.products || []).filter(
+          (product: Product) => product.isActive
+        );
         return { products: filteredProducts, pageInfo };
       } else {
+        console.error(`Products fetch failed for category: ${response.status}`);
         throw new Error("Failed to fetch products for category");
       }
     } else {
@@ -110,28 +115,31 @@ async function fetchPageData(slug: string): Promise<{
 
       if (foundSubcategory && parentCategory) {
         const pageInfo: PageInfo = {
-          id: foundSubcategory.id,
-          name: foundSubcategory.name,
+          id: foundSubcategory.id || "",
+          name: foundSubcategory.name || "Subcategory",
           type: "subcategory",
           parentCategory: parentCategory.name,
           parentCategoryId: parentCategory.id,
           description:
             foundSubcategory.description ||
-            `Professional ${foundSubcategory.name.toLowerCase()} solutions for your industrial needs`,
-          image: foundSubcategory.image,
+            `Professional ${foundSubcategory.name?.toLowerCase() || "solutions"} for your industrial needs`,
+          image: foundSubcategory.image || "",
         };
 
         // Fetch products for subcategory
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/products?subcategoryId=${foundSubcategory.id}`,
-          { cache: 'no-store' }
+          `${apiUrl}/api/admin/products?subcategoryId=${foundSubcategory.id}`,
+          { cache: "no-store" }
         );
 
         if (response.ok) {
           const data = await response.json();
-          const filteredProducts = data.products?.filter((product: Product) => product.isActive) || [];
+          const filteredProducts = (data.products || []).filter(
+            (product: Product) => product.isActive
+          );
           return { products: filteredProducts, pageInfo };
         } else {
+          console.error(`Products fetch failed for subcategory: ${response.status}`);
           throw new Error("Failed to fetch products for subcategory");
         }
       }
@@ -151,26 +159,27 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const { slug } = resolvedParams;
-  
+
   // Fetch data to get the actual category/subcategory name
   const data = await fetchPageData(slug);
-  
+
   let title = "Products | Oasis Marine Trading LLC";
   let description = "Explore our comprehensive range of marine and industrial products.";
-  
+
   if (data) {
     const { pageInfo } = data;
     title = `${pageInfo.name} Products | Oasis Marine Trading LLC`;
-    description = pageInfo.description || `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+    description =
+      pageInfo.description ||
+      `Explore our comprehensive range of ${pageInfo.name.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
   } else {
     // Fallback to slug-based title if data fetching fails
     const categoryName = slug
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-    
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
     title = `${categoryName} Products | Oasis Marine Trading LLC`;
-    description = `Explore our comprehensive range of ${categoryName} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
+    description = `Explore our comprehensive range of ${categoryName.toLowerCase()} products. High-quality marine and industrial solutions from Oasis Marine Trading LLC.`;
   }
 
   return {
@@ -180,7 +189,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      type: 'website',
+      type: "website",
       url: `https://oasismarineuae.com/products/${slug}`,
     },
     robots: {
@@ -204,14 +213,16 @@ export default async function DynamicCategorySubcategoryPage({
   }
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
-          <p className="text-xl text-gray-600">Loading products...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
+            <p className="text-xl text-gray-600">Loading products...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <CategoryContent params={{ slug }} />
     </Suspense>
   );
@@ -219,7 +230,7 @@ export default async function DynamicCategorySubcategoryPage({
 
 async function CategoryContent({ params }: { params: { slug: string } }) {
   const { slug } = params;
-  
+
   // Fetch data on the server
   const data = await fetchPageData(slug);
 
